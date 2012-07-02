@@ -2,14 +2,19 @@
 <PLUGIN>
 
 <!--
-2012-04-14 - headphones-0.1-influenced - First release, packages for auto-update are commented out as may be larger than wanted
-2012-05-24 - 0.2-ww		       		   - added newest dependencies + install and data dir sizes + some improvements
-2012-05-24 - 0.3-influenced			   - added message indicated if data directory will survuve a reboot or not
-2012-05-25-ww						   - added some layou modifications  
-2012-05-29-ww			 			   - little fixes
-
 This Plugin installs and controls headphones for UnRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits:
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+
+WW: Some config page formatting
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
+
 -->
 
 <FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">

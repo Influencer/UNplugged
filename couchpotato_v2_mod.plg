@@ -4,6 +4,17 @@
 <!--
 This Plugin installs and controls CouchPotato v2 for unRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits:
+Benni-Chan: Code for original(couchpotato v1) plug-in. Much of that code is still in place.
+
+WW: Modification to enable use of Couchpotato V2, config page formatting, ability to select alternate branches.
+
+I have...
+ * done little for this plug-in other than maintaining it and some bug fixes.
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
 <FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">

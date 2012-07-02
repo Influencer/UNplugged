@@ -2,7 +2,6 @@
 <PLUGIN>
 
 <!--
-2012-06-01 - Initial Release
 This Plugin installs and controls Darkstat for UnRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
 

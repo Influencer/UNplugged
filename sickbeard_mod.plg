@@ -2,9 +2,19 @@
 <PLUGIN>
 
 <!--
-Testing Testing 1 2
 This Plugin installs and controls Sickbeard for UnRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits: 
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+place and changes have been made for new features and fixes.
+
+WW: Install & Data Directory size, some config page formatting, multi-branch selection
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
 <FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
