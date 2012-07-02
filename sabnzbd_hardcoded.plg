@@ -1,0 +1,579 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+2011-08-19 0.1-1bw  		- first release
+2011-08-20 0.2-1bw  		- some bug fixes
+2011-08-21 0.3-1bw  		- support for extra config dir, install to ramdisk, drop of sabnzbddependencies package
+2011-08-22 0.4-1bw  		- fixed a bug, when installed to ramdisk
+2011-08-22 0.4a-1bw 		- updated par2 to multicore version
+2011-10-15 0.4b-bw  		- workaround if apikey can't be read correctly
+2011-10-21 0.4c-bw  		- bugfix for updater (version number wasn't read correctly)
+2012-04-11 0.5 				- Beta Branch - Test for allowing sabnzbd beta installation
+2012-04-14 0.5a-influenced  - First release
+2012-05-12 0.6-ww 			- First release with newest dependiences and some sabnzbd beta installation improvements
+2012-05-14 0.6a-ww          - added version informations
+2012-05-04 0.7-influenced   - changed install and data directories to fix bug(if data directory exists at /mnt/cache/.Apps/ all information would be overwritten)
+2012-05-15 0.7.2-ww         - added storage/memory used by install & data dirs + some improvements
+2012-05-15 0.7.3-ww         - added some improvements
+2012-05-24 0.7.4-influenced - Added message indicating whether data directory will survive a reboot or will be lost
+2012-05-25-ww				- added some formatting in web layout
+2012-05-29-ww			    - little fixes
+
+This Plugin installs and controls SABnzbd+ for UnRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+Also this plugin enables easy updates for SABnzbd, since the app doesn't have it's own update routine
+-->
+
+<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
+<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+</FILE>
+<FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
+<URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
+<MD5>9535ac8193f269729467357b068117aa</MD5>
+</FILE>
+<FILE Name="/boot/packages/python-yenc-0.3-i486-1alien.tgz" Run="upgradepkg --install-new">
+<URL>http://connie.slackware.com/~alien/slackbuilds/python-yenc/pkg/13.37/python-yenc-0.3-i486-1alien.tgz</URL>
+<MD5>904c93692352cc2ddb8a3f769408bfad</MD5>
+</FILE>
+<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
+<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
+</FILE>
+<FILE Name="/boot/packages/unrar-4.0.7-i486-2alien.tgz" Run="upgradepkg --install-new">
+<URL>http://connie.slackware.com/~alien/slackbuilds/unrar/pkg/13.37/unrar-4.0.7-i486-2alien.tgz</URL>
+<MD5>33c9f9ad19261d5ebdd1ec8d357e8037</MD5>
+</FILE>
+<FILE Name="/boot/packages/infozip-6.0-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/a/infozip-6.0-i486-1.txz</URL>
+<MD5>4d59c199192a5fc4dc55089edcb66723</MD5>
+</FILE>
+<FILE Name="/boot/packages/openssl-solibs-0.9.8x-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://www.slackware.org.uk/slackware/slackware-current/slackware/a/openssl-solibs-0.9.8x-i486-1.txz</URL>
+<MD5>545a3d0cc1f77f8d335bbbd4bacdbb12</MD5>
+</FILE>
+<FILE Name="/boot/packages/pyopenssl-0.11-i486-1alien.tgz" Run="upgradepkg --install-new">
+<URL>http://connie.slackware.com/~alien/slackbuilds/pyopenssl/pkg/13.37/pyopenssl-0.11-i486-1alien.tgz</URL>
+<MD5>e02b8f7ff139e51c101721440068c455</MD5>
+</FILE>
+<FILE Name="/boot/packages/par2cmdline_tbb-0.4-i486-1kh.tgz" Run="upgradepkg --install-new">
+<URL>http://unraid-greenleaf-repository.googlecode.com/files/par2cmdline_tbb-0.4-i486-1kh.tgz</URL>
+<MD5>c5a5550888ae009531f133a33ed85be7</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/sabnzbd/sabnzbd.png">
+<URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/sabnzbd.png</URL>
+</FILE>
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/sabnzbd-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+rm -f /etc/rc.d/rc.sabnzbd
+rm -f -R /usr/local/emhttp/plugins/sabnzbd
+rm /tmp/sabnzbd-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/sabnzbd/sabnzbd.cfg">
+<INLINE>
+<![CDATA[
+# sabnzbd configuration
+SERVICE="disable"
+INSTALLDIR="/usr/local/sabnzbd"
+DATADIR="/usr/local/sabnzbd"
+PORT="8081"
+RUNAS="nobody"
+INSTALLBETA="no"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.sabnzbd" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# Start/stop/restart/enable/disable sabnzbd.
+
+sabnzbd_start()
+{
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		return
+	fi
+  
+	# no-op if already running
+	if [ -r /var/run/sabnzbd/sabnzbd-$PORT.pid ]; then
+		return
+	fi
+
+	# if directory doesn't exist or sabnzbd is not found, install it
+	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/SABnzbd.py" ]]; then
+		sabnzbd_install
+	fi
+  
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd > /dev/null 2>&1"
+	echo -n "Starting sabnzbd:  $CMDLINE"
+	$CMDLINE
+	echo
+  
+	while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
+		sleep 1
+	done
+}
+
+sabnzbd_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/sabnzbd/sabnzbd-$PORT.pid ]; then
+		return
+	fi
+	echo -n "Stopping sabnzbd..."
+	sleep 0.5
+	echo
+
+	if [ -d $DATADIR ] && [ -f $DATADIR/sabnzbd.ini ]; then
+		APIKEY=`grep -w api_key $DATADIR/sabnzbd.ini | cut -d " " -f3`
+		IP=$(ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | grep -v '^5' | awk '{ print $1}')
+		RES=$(wget -qO - "http://$IP:$PORT/sabnzbd/api?mode=shutdown&apikey=$APIKEY")
+		if [[ $RES != "ok" ]]; then
+			echo "wrong API KEY found, using kill"
+			kill $(cat /var/run/sabnzbd/sabnzbd-$PORT.pid)
+		fi
+	else
+		kill $(cat /var/run/sabnzbd/sabnzbd-$PORT.pid)
+	fi
+	echo
+
+	while [ -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
+		sleep 1
+	done
+}
+
+sabnzbd_restart()
+{
+	sabnzbd_stop
+	sleep 1
+	sabnzbd_start
+}
+
+write_config()
+{
+	echo "# sabnzbd configuration" > /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "PORT=\"$PORT\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "INSTALLBETA=\"$INSTALLBETA\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+}
+
+sabnzbd_enable()
+{
+	# if not already enabled, enable it
+	if [ "$SERVICE" != "enable" ]; then
+		SERVICE=enable
+		PORT="$2"
+		INSTALLDIR="$3"
+		DATADIR="$4"
+		INSTALLBETA="$5"
+	
+		if [ $DATADIR == "" ]; then
+			$DATADIR=$INSTALLDIR
+		fi
+	
+		if [ $RUNAS != $1 ]; then
+			chown -R $1:users "$INSTALLDIR"
+		fi
+	
+		RUNAS="$1"
+	
+		# create sabnzbd user if necessary
+		if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+			if ( ! grep -q ^$RUNAS /etc/passwd ); then
+				useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+				cp /etc/passwd /etc/shadow /boot/config
+			fi
+		fi
+		write_config
+	fi
+
+	# enabling also starts it
+	sabnzbd_start
+}
+
+sabnzbd_disable()
+{
+	sabnzbd_stop
+	SERVICE=disable
+	write_config
+}
+
+sabnzbd_install()
+{	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p "$INSTALLDIR"
+	fi
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p "$DATADIR"
+	fi
+	
+		stable=0.7.0
+		echo "installing latest Version ($stable)"
+	
+		cd /tmp
+		wget http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus/0.7.0/SABnzbd-0.7.0-src.tar.gz
+		tar -xf /tmp/SABnzbd-${stable}-src.tar.gz
+		cp -R /tmp/SABnzbd-${stable}/* $INSTALLDIR
+		chown -R $RUNAS:users "$INSTALLDIR"		
+		rm -R /tmp/SABnzbd-${stable} /tmp/SABnzbd-${stable}-src.tar.gz
+	
+}
+
+sabnzbd_check_update()
+{
+	if [[ $INSTALLBETA = "no" || $INSTALLBETA = "" ]]; then
+		sabnzbd_version
+		stable=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+	
+		if [[ $currentversion != "" && $currentversion != $stable ]]; then
+			echo "Stable update available to version: $stable"
+		fi
+	elif [ $INSTALLBETA = "yes" ]; then
+		sabnzbd_version
+		beta=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
+			if [ $beta = "" ]; then
+				stable=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+				echo "Currently no beta available, latest stable is $stable"
+			else
+				if [[ $currentversion != "" && $currentversion != $beta ]]; then
+				echo "Beta update available to version: $beta" 
+				fi
+			fi
+	fi 
+}
+
+sabnzbd_update()
+{
+	sabnzbd_stop
+	sleep 1
+	sabnzbd_install
+	sleep 1
+	sabnzbd_start
+}	
+
+sabnzbd_version()
+{
+	if [ -f $INSTALLDIR/SABnzbd.py ]; then
+		currentversion=$(python $INSTALLDIR/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21)
+	else 
+		echo SABnzbd does not exist!
+		exit 0
+	fi
+}
+
+sabnzbd_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b>Your Data Directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b>Your Data Directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+# read our configuration
+source /boot/config/plugins/sabnzbd/sabnzbd.cfg
+
+case "$1" in
+	'start')
+		sabnzbd_start
+	;;
+	'stop')
+		sabnzbd_stop
+	;;
+	'restart')
+		sabnzbd_restart
+	;;
+	'enable')
+		sabnzbd_enable $2 $3 $4 $5 $6
+	;;
+	'disable')
+		sabnzbd_disable
+	;;
+	'install')
+		sabnzbd_install
+	;;	
+	'update')
+		sabnzbd_update
+	;;	
+	'check_update')
+		sabnzbd_check_update
+	;;
+	'version')
+		sabnzbd_version
+		echo $currentversion
+	;;
+	'datacheck')
+		sabnzbd_datacheck
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|check_update|version|datacheck"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/sabnzbd.page">
+<INLINE>
+<![CDATA[
+Menu="NetworkServices"
+Icon="sabnzbd.png"
+Version="0.7.3"
+Author="Benjamin Waller; Influencer; Wojciech Walaszek"
+Type="php"
+Title="SABnzbd"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/sabnzbd.png">
+<LOCAL>/boot/config/plugins/sabnzbd/sabnzbd.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/sabnzbd.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$sabnzbd_cfg = parse_ini_file( "/boot/config/plugins/sabnzbd/sabnzbd.cfg");
+$sabnzbd_installed = file_exists( $sabnzbd_cfg["INSTALLDIR"] . "/SABnzbd.py" ) ? "yes" : "no";
+if ($sabnzbd_installed=="yes")
+{
+	$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
+	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sabnzbd_cfg['PORT'].".pid") ? "yes" : "no";
+	$sabnzbd_update  = "";
+	$sabnzbd_curversion  = shell_exec( "/etc/rc.d/rc.sabnzbd version" );
+	$sabnzbd_stableversion = shell_exec( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,\"\");print}' | sed -n 1p" );
+	$sabnzbd_betaversion = shell_exec( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,\"\");print}' | sed -n 1p" );
+	$sabnzbd_installdirsize = trim(shell_exec( "if [ -e $sabnzbd_cfg[INSTALLDIR] ]; then du -sh $sabnzbd_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
+	$sabnzbd_datadirsize = trim(shell_exec( "if [ -e $sabnzbd_cfg[DATADIR] ]; then du -sh $sabnzbd_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
+}
+?>
+	<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd">
+		<table class="settings">
+			<tr>
+				<td>Enable SABnzbd:</td>
+				<td>
+					<select name="arg1" size="1" onChange="checkINSTALLDIR(this.form);">
+						<?=mk_option($sabnzbd_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($sabnzbd_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install Beta/RC versions:</td>
+				<td>
+					<select name="arg6" size="1">
+						<?=mk_option($sabnzbd_cfg['INSTALLBETA'], "no", "No");?>
+						<?=mk_option($sabnzbd_cfg['INSTALLBETA'], "yes", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$sabnzbd_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?>  onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$sabnzbd_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1"  onChange="checkUSER(this.form);">
+						<?=mk_option($sabnzbd_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($sabnzbd_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($sabnzbd_cfg['RUNAS'] != "root" && $sabnzbd_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="text" name="arg2" maxlength="40" value="<?=$sabnzbd_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><input type="submit" name="runCmd" value="Apply"><button type="button" onClick="done();">Done</button></td>
+			</tr>
+		</table>
+	</form>
+	<hr>
+<div id="title"><span class="left">Status:
+<?if ($sabnzbd_running=="yes"):?>
+  <a href="http://<?=$var['NAME'];?>:<?=$sabnzbd_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span> with version: <b><?=$sabnzbd_curversion?></b></span>
+<?else:?>
+  <span class="red"><b>STOPPED</b></span>
+<?endif;?>
+</span></div>
+<? if ($sabnzbd_installed=="yes"): ?>
+	<? if ($sabnzbd_installdirsize!=0 && $sabnzbd_installdirsize!=""): ?>
+		<? if ($sabnzbd_cfg["INSTALLDIR"] == $sabnzbd_cfg["DATADIR"]): ?>
+			<p style="margin-left:10px;">SABnzbd storage memory usage: install + data directory: <b><?=$sabnzbd_installdirsize?></b></p>
+		<? else: ?>
+			<p style="margin-left:10px;">SABnzbd storage memory usage: install directory: <b><?=$sabnzbd_installdirsize?></b>, data directory: <b><?=$sabnzbd_datadirsize?></b></p>
+		<? endif; ?>
+	<? endif; ?>
+	<?=$sabnzbd_datacheck?>
+	<? if ($sabnzbd_update != ""): ?>
+		<? if ($sabnzbd_cfg['INSTALLBETA'] == yes && $sabnzbd_betaversion != ""): ?>
+			<? if ($sabnzbd_betaversion != $sabnzbd_curversion): ?>
+		<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
+			<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd update">
+				<p style="font-size:14px;color:blue;margin-left:10px;">Update available to version: <b><?=$sabnzbd_betaversion?></b></p>
+			<table style="align:center;">
+				<tr>
+					<td><input type="submit" name="runCmd" value="Update"><button type="button" onClick="done();">Done</button></td>
+				</tr>
+			</table>
+		</form>
+			<? endif; ?>
+		<? else: ?>
+		<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
+			<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd update">
+				<p style="font-size:14px;color:blue;margin-left:10px;">Update available to version: <b><?=$sabnzbd_stableversion?></b></p>
+			<table style="align:center;">
+				<tr>
+					<td><input type="submit" name="runCmd" value="Update"><button type="button" onClick="done();">Done</button></td>
+				</tr>
+			</table>
+		</form>
+		<? endif; ?>
+	<? endif; ?>
+<? else: ?>
+	<p style="margin-left:10px;"><b>SABnzbd is not installed</b></p>
+<? endif; ?>	
+<hr>
+
+<script type="text/javascript">
+function checkINSTALLDIR(form)
+{
+	if ("<?=$sabnzbd_running;?>" == "yes")
+	{
+		form.arg2.readOnly = true;
+		form.arg3.readOnly = true;
+		form.arg4.readOnly = true;
+		form.arg5.readOnly = true;
+		form.arg6.readOnly = true;
+		form.runas.disabled = true;
+		form.use_data.disabled = true;
+	}
+   else
+   {
+		form.arg2.readOnly = (form.arg1.value == "enable");
+		form.arg3.readOnly = (form.arg1.value == "enable");
+		form.arg4.readOnly = (form.arg1.value == "enable");
+		form.arg5.readOnly = (form.arg1.value == "enable");
+		form.arg6.readOnly = (form.arg1.value == "enable");
+		form.runas.disabled = (form.arg1.value == "enable");
+		form.use_data.disabled = (form.arg1.value == "enable");
+   }
+}
+
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$sabnzbd_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$sabnzbd_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+checkINSTALLDIR(document.sabnzbd_settings);
+checkUSER(document.sabnzbd_settings);
+checkDATADIR(document.sabnzbd_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.sabnzbd start
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.sabnzbd stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/sabnzbd-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/sabnzbd/sabnzbd.cfg
+
+# create sabnzbd-writable directory for pid file
+if [ ! -e /var/run/sabnzbd ]; then
+	mkdir /var/run/sabnzbd
+	chown $RUNAS:users /var/run/sabnzbd
+	chmod 0777 /var/run/sabnzbd
+fi
+rm /tmp/sabnzbd-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/sabnzbd">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
