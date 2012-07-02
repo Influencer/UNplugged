@@ -2,6 +2,7 @@
 <PLUGIN>
 
 <!--
+This is the dev branch
 This Plugin installs and controls Sickbeard for UnRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
 -->
