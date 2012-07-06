@@ -302,6 +302,31 @@ couchpotato_datacheck()
 	done
 }
 
+couchpotato_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f couchpotato_v2_unplugged.plg ]; then
+	mv couchpotato_v2_unplugged.plg couchpotato_v2_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/couchpotato_v2_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/couchpotato_v2_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
+	fi
+}
+couchpotato_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f couchpotato_v2_unplugged.plg.old ]; then
+	rm -f /couchpotato_v2_unplugged.plg
+	mv couchpotato_v2_unplugged.plg.old couchpotato_v2_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
+	fi
+}
+
 # read our configuration
 source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 if [ -e "$CONFIGFILE" ]; then
@@ -337,8 +362,14 @@ case "$1" in
 	'datacheck')
 		couchpotato_datacheck
 	;;
+	'updateplg')
+		couchpotato_updateplg
+	;;
+	'downgradeplg')
+		couchpotato_downgradeplg
+	;;
 	*)
-		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck"
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
 esac
 ]]>
 </INLINE>
@@ -379,6 +410,7 @@ Title="CouchPotato v2"
 <?PHP
 $couchpotato_cfg = parse_ini_file( "/boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg");
 $couchpotato_installed = file_exists( $couchpotato_cfg["INSTALLDIR"] . "/CouchPotato.py" ) ? "yes" : "no";
+$couchpotato_rollback = file_exists( "boot/config/plugins/couchpotato_v2_unplugged.plg.old" ) ? "yes" : "no";
 $couchpotato_configfile = $couchpotato_cfg["CONFIGFILE"];
 $couchpotato_datadir = trim(shell_exec( "cat \"$couchpotato_configfile\" | grep 'data_dir' | cut -d' ' -f3" ));
 if ($couchpotato_installed=="yes")
@@ -439,6 +471,27 @@ if (file_exists($couchpotato_configfile))
 			</form>
 		</div>
 	<?endif;?>
+	<? if ($couchpotato_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="couchpotato_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="couchpotato_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="couchpotato_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
 	<? if ($couchpotato_installed=="yes"): ?>	
 		<center><hr size="3" width="50%" color="grey"></center>
 		<p style="margin-left:10px;">Installed from <?=$couchpotato_cfg[BRANCH]?> branch of <?=$couchpotato_cfg[INSTALLURL]?> site</p>
