@@ -308,11 +308,11 @@ couchpotato_updateplg()
 	if [ -f couchpotato_v2_unplugged.plg ]; then
 	mv couchpotato_v2_unplugged.plg couchpotato_v2_unplugged.plg.old
 	echo "Updating plugin"
-	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/couchpotato_v2_unplugged.plg
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/couchpotato_v2_unplugged.plg
 	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
 	else
 	echo "Updating plugin"
-	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/couchpotato_v2_unplugged.plg
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/couchpotato_v2_unplugged.plg
 	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
 	fi
 }
