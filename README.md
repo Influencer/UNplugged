@@ -21,7 +21,7 @@ Although unRAID is considered by some to be a "enthusiast" OS, and that many use
 
 I hope you enjoy my releases, and as always, if there are any suggestions, feel free to let me know.
 
-If you like my work, feel free to donate. I will NEVER ask for donations.
+If you like my work, feel free to donate. I will NEVER require a donation or payment.
 
 [DONATE](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2679NHED2LCHG)
 
@@ -36,6 +36,6 @@ Right click and save link as;
 
 ###Special Thanks:
 
-wjd85 for donation
-Sweigh for donation
-mdm144 for donation
+  wjd85 for donation
+  Sweigh for donation
+  mdm144 for donation
