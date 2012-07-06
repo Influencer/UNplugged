@@ -1,4 +1,6 @@
-## unRAID Plug-ins
+# Influenced Plug-ins
+##unPLUGGED
+![unPLUGGED](https://code.google.com/p/influenced-plgs/logo?cct=1334782114)
 
 Some of these plugins are modified versions of others plug-ins. I've done this if the original author is not currently active or if many requests for changes are made and the author hasn't responded.
 
@@ -25,6 +27,7 @@ If you like my work, feel free to donate. I will NEVER ask for donations.
 
 ###Downloads:
 Right click and save link as;
+
 -  [Couchpotato_v2_unplugged.plg](https://github.com/influencer/unplugged/raw/master/couchpotato_v2.plg)
 -  [Sabnzbd_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sabnzbd_mod.plg)
 -  [Sickbeard_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sickbeard_mod.plg)

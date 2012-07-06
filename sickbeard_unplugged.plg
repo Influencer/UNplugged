@@ -349,8 +349,8 @@ if ($sickbeard_installed=="yes")
 		$sickbeard_datasize = shell_exec ( "/etc/rc.d/rc.sickbeard storagesize $sickbeard_cfg[INSTALLDIR] $sickbeard_cfg[DATADIR]" );
 	if ($sickbeard_cfg[PLG_DATACHECK]=="yes")
 		$sickbeard_datacheck = shell_exec ( "/etc/rc.d/rc.sickbeard datacheck" );
-	if (file_exists($sickbeard_cfg["DATADIR"] . "/version.txt"))
-		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[DATADIR]/version.txt" ));
+	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/version.txt"))
+		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[INSTALLDIR]/version.txt" ));
 	else
 		$sickbeard_curversion = "couldn't determine the SickBeard version"; 
 	$sickbeard_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
