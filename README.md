@@ -30,3 +30,7 @@ Right click and save link as;
 -  [Sickbeard_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sickbeard_mod.plg)
 -  [Headphones_unplugged.plg](https://github.com/influencer/unplugged/raw/master/headphones_mod.plg)
 -  [Darkstat-1.9_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_mod.plg)
+
+###Special Thanks:
+
+wjd85 for donation
