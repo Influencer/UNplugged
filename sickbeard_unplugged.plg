@@ -40,6 +40,15 @@ I have...
 <FILE Name="/boot/config/plugins/sickbeard/sickbeard.png">
 <URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/sickbeard.png</URL>
 </FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
 
 <!-- clean up previous install -->
 <FILE Name="/tmp/sickbeard-cleanup" Run="/bin/bash">
@@ -324,8 +333,8 @@ esac
 <![CDATA[
 Menu="NetworkServices"
 Icon="sickbeard.png"
-Version="0.7"
-Author="Benjamin Waller; Wojciech Walaszek; Influencer"
+Version="1.0"
+Author="Benjamin Waller; Influencer"
 Type="php"
 Title="SickBeard"
 ]]>
@@ -334,6 +343,18 @@ Title="SickBeard"
 
 <FILE Name="/usr/local/emhttp/plugins/sickbeard/sickbeard.png">
 <LOCAL>/boot/config/plugins/sickbeard/sickbeard.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sickbeard/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sickbeard/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sickbeard/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
 </FILE>
 
 <FILE Name="/usr/local/emhttp/plugins/sickbeard/sickbeard.php">
@@ -359,7 +380,7 @@ if ($sickbeard_installed=="yes")
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/simpleFeatures/icons/device_status.png' class='icon'>Status:
+		<span class="left"><img src='/plugins/sickbeard/device_status.png' class='icon'>Status:
 			<?if ($sickbeard_installed=="yes"):?>	
 				<?if ($sickbeard_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$sickbeard_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sickbeard_curversion?></b></span>
@@ -420,7 +441,7 @@ if ($sickbeard_installed=="yes")
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/simpleFeatures/icons/new_config.png' class='icon'>Configuration:</span>
+		<span class="left"><img src='/plugins/sickbeard/new_config.png' class='icon'>Configuration:</span>
 	</div>
 	<form name="sickbeard_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard">
@@ -499,7 +520,7 @@ if ($sickbeard_installed=="yes")
 								<option value='other'<?=($sickbeard_cfg['INSTALLURL'] != "https://github.com/midgetspy/Sick-Beard")?" selected=yes":"" ;?>>other github</option>
 							</select>
 							<input type="hidden" name="arg8" maxlength="100" style="text-align:left;width:63%" value="<?=$sickbeard_cfg['INSTALLURL'];?>">
-							<img src="/plugins/simpleFeatures/images/information.png" title="Installing from other than official github site is not recommended. Use this option at your own risk!"/>
+							<img src="/plugins/sickbeard/information.png" title="Installing from other than official github site is not recommended. Use this option at your own risk!"/>
 						</td>
 					</tr>
 					<tr>
@@ -510,7 +531,7 @@ if ($sickbeard_installed=="yes")
 								<option value='other'<?=($sickbeard_cfg['BRANCH'] != "master")?" selected=yes":"" ;?>>other</option>
 							</select>
 							<input type="hidden" name="arg9" maxlength="40" style="text-align:left;width:71%" value="<?=$sickbeard_cfg['BRANCH'];?>">
-							<img src="/plugins/simpleFeatures/images/information.png" title="Installing other branch than master is not recommended. Use this option at your own risk!"/>
+							<img src="/plugins/sickbeard/information.png" title="Installing other branch than master is not recommended. Use this option at your own risk!"/>
 						</td>
 					</tr>
 				</table>
