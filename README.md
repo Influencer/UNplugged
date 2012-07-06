@@ -37,3 +37,5 @@ Right click and save link as;
 ###Special Thanks:
 
 wjd85 for donation
+Sweigh for donation
+mdm144 for donation
