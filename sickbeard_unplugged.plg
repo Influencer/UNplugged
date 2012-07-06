@@ -5,6 +5,17 @@
 This is the dev branch!!!
 This Plugin installs and controls Sickbeard for UnRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits: 
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+place and changes have been made for new features and fixes.
+
+WW: Install & Data Directory size, some config page formatting, multi-branch selection
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
 <FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
@@ -29,6 +40,15 @@ All dependencies are installed as needed and everything is controlable from the 
 </FILE>
 <FILE Name="/boot/config/plugins/sickbeard/sickbeard.png">
 <URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/sickbeard.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
 </FILE>
 
 <!-- clean up previous install -->
@@ -314,8 +334,8 @@ esac
 <![CDATA[
 Menu="NetworkServices"
 Icon="sickbeard.png"
-Version="0.7"
-Author="Benjamin Waller; Wojciech Walaszek; Influencer"
+Version="1.0"
+Author="Benjamin Waller; Influencer"
 Type="php"
 Title="SickBeard"
 ]]>
@@ -324,6 +344,18 @@ Title="SickBeard"
 
 <FILE Name="/usr/local/emhttp/plugins/sickbeard/sickbeard.png">
 <LOCAL>/boot/config/plugins/sickbeard/sickbeard.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sickbeard/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sickbeard/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sickbeard/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
 </FILE>
 
 <FILE Name="/usr/local/emhttp/plugins/sickbeard/sickbeard.php">
@@ -339,8 +371,8 @@ if ($sickbeard_installed=="yes")
 		$sickbeard_datasize = shell_exec ( "/etc/rc.d/rc.sickbeard storagesize $sickbeard_cfg[INSTALLDIR] $sickbeard_cfg[DATADIR]" );
 	if ($sickbeard_cfg[PLG_DATACHECK]=="yes")
 		$sickbeard_datacheck = shell_exec ( "/etc/rc.d/rc.sickbeard datacheck" );
-	if (file_exists($sickbeard_cfg["DATADIR"] . "/version.txt"))
-		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[DATADIR]/version.txt" ));
+	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/version.txt"))
+		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[INSTALLDIR]/version.txt" ));
 	else
 		$sickbeard_curversion = "couldn't determine the SickBeard version"; 
 	$sickbeard_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
@@ -349,7 +381,7 @@ if ($sickbeard_installed=="yes")
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/simpleFeatures/icons/device_status.png' class='icon'>Status:
+		<span class="left"><img src='/plugins/sickbeard/device_status.png' class='icon'>Status:
 			<?if ($sickbeard_installed=="yes"):?>	
 				<?if ($sickbeard_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$sickbeard_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sickbeard_curversion?></b></span>
@@ -410,7 +442,7 @@ if ($sickbeard_installed=="yes")
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/simpleFeatures/icons/new_config.png' class='icon'>Configuration:</span>
+		<span class="left"><img src='/plugins/sickbeard/new_config.png' class='icon'>Configuration:</span>
 	</div>
 	<form name="sickbeard_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard">
@@ -489,7 +521,7 @@ if ($sickbeard_installed=="yes")
 								<option value='other'<?=($sickbeard_cfg['INSTALLURL'] != "https://github.com/midgetspy/Sick-Beard")?" selected=yes":"" ;?>>other github</option>
 							</select>
 							<input type="hidden" name="arg8" maxlength="100" style="text-align:left;width:63%" value="<?=$sickbeard_cfg['INSTALLURL'];?>">
-							<img src="/plugins/simpleFeatures/images/information.png" title="Installing from other than official github site is not recommended. Use this option at your own risk!"/>
+							<img src="/plugins/sickbeard/information.png" title="Installing from other than official github site is not recommended. Use this option at your own risk!"/>
 						</td>
 					</tr>
 					<tr>
@@ -500,7 +532,7 @@ if ($sickbeard_installed=="yes")
 								<option value='other'<?=($sickbeard_cfg['BRANCH'] != "master")?" selected=yes":"" ;?>>other</option>
 							</select>
 							<input type="hidden" name="arg9" maxlength="40" style="text-align:left;width:71%" value="<?=$sickbeard_cfg['BRANCH'];?>">
-							<img src="/plugins/simpleFeatures/images/information.png" title="Installing other branch than master is not recommended. Use this option at your own risk!"/>
+							<img src="/plugins/sickbeard/information.png" title="Installing other branch than master is not recommended. Use this option at your own risk!"/>
 						</td>
 					</tr>
 				</table>
