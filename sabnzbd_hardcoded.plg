@@ -110,7 +110,7 @@ sabnzbd_start()
 		sabnzbd_install
 	fi
   
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd > /dev/null 2>&1"
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd > /master/null 2>&1"
 	echo -n "Starting sabnzbd:  $CMDLINE"
 	$CMDLINE
 	echo
@@ -200,7 +200,7 @@ sabnzbd_enable()
 		# create sabnzbd user if necessary
 		if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
 			if ( ! grep -q ^$RUNAS /etc/passwd ); then
-				useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+				useradd -r -g users -d / -s /bin/false $RUNAS &> /master/null
 				cp /etc/passwd /etc/shadow /boot/config
 			fi
 		fi
@@ -300,6 +300,30 @@ sabnzbd_datacheck()
 	done
 }
 
+sabnzbd_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f sabnzbd_unplugged.plg ]; then
+	mv sabnzbd_unplugged.plg sabnzbd_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/sabnzbd_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/sabnzbd_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
+	fi
+}
+sabnzbd_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f sabnzbd_unplugged.plg.old ]; then
+	rm -f /sabnzbd_unplugged.plg
+	mv sabnzbd_unplugged.plg.old sabnzbd_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
+	fi
+}
 # read our configuration
 source /boot/config/plugins/sabnzbd/sabnzbd.cfg
 
@@ -335,8 +359,14 @@ case "$1" in
 	'datacheck')
 		sabnzbd_datacheck
 	;;
+	'updateplg')
+		sabnzbd_updateplg
+	;;
+	'downgradeplg')
+		sabnzbd_downgradeplg
+	;;
 	*)
-		echo "usage $0 start|stop|restart|enable|disable|install|update|check_update|version|datacheck"
+		echo "usage $0 start|stop|restart|enable|disable|install|update|check_update|version|datacheck|updateplg|downgradeplg"
 esac
 ]]>
 </INLINE>
@@ -347,7 +377,6 @@ esac
 <![CDATA[
 Menu="NetworkServices"
 Icon="sabnzbd.png"
-Version="0.7.3"
 Author="Benjamin Waller; Influencer; Wojciech Walaszek"
 Type="php"
 Title="SABnzbd"
@@ -365,18 +394,239 @@ Title="SABnzbd"
 <?PHP
 $sabnzbd_cfg = parse_ini_file( "/boot/config/plugins/sabnzbd/sabnzbd.cfg");
 $sabnzbd_installed = file_exists( $sabnzbd_cfg["INSTALLDIR"] . "/SABnzbd.py" ) ? "yes" : "no";
+$sabnzbd_rollback = file_exists( "boot/config/plugins/sabnzbd_unplugged.plg.old" ) ? "yes" : "no";
 if ($sabnzbd_installed=="yes")
 {
-	$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
-	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sabnzbd_cfg['PORT'].".pid") ? "yes" : "no";
-	$sabnzbd_update  = "";
-	$sabnzbd_curversion  = shell_exec( "/etc/rc.d/rc.sabnzbd version" );
-	$sabnzbd_stableversion = shell_exec( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,\"\");print}' | sed -n 1p" );
-	$sabnzbd_betaversion = shell_exec( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,\"\");print}' | sed -n 1p" );
-	$sabnzbd_installdirsize = trim(shell_exec( "if [ -e $sabnzbd_cfg[INSTALLDIR] ]; then du -sh $sabnzbd_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
-	$sabnzbd_datadirsize = trim(shell_exec( "if [ -e $sabnzbd_cfg[DATADIR] ]; then du -sh $sabnzbd_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
+	if (file_exists($sabnzbd_configfile))
+		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
+	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sab_port.".pid") ? "yes" : "no";
+	if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes")
+		$sabnzbd_datasize = shell_exec ( "/etc/rc.d/rc.sabnzbd storagesize $sabnzbd_cfg[INSTALLDIR] $sabnzbd_cfg[DATADIR]" );
+	if ($sabnzbd_cfg[PLG_DATACHECK]=="yes")
+		$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
+	$sabnzbd_curversion = shell_exec ( "python $sabnzbd_cfg[INSTALLDIR]/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21" );
+	$sabnzbd_newversion = shell_exec ( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk NR==1" );
 }
+else
+	if (file_exists("/boot/config/plugins/sabnzbd/sabnzbd.ini"))
+		$sab_port = trim(shell_exec( "cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
 ?>
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left"><img src='/plugins/sabnzbd/masterice_status.png' class='icon'>Status:
+			<?if ($sabnzbd_installed=="yes"):?>	
+				<?if ($sabnzbd_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$sabnzbd_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($sabnzbd_installed=="yes"):?>
+		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+			<form name="sabnzbd_start_stop" method="POST" action="/update.htm" target="progressFrame">
+				<?if ($sabnzbd_running=="yes"):?>
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd stop">
+					<input type="submit" name="runCmd" value="Stop">
+				<?else:?>
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd start">
+					<input type="submit" name="runCmd" value="Start">
+				<?endif;?>
+			</form>
+		</div>
+		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+			<form name="sabnzbd_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd restart">
+					<input type="submit" name="runCmd" value="Restart">
+			</form>
+		</div>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="sabnzbd_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($sabnzbd_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="sabnzbd_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="sabnzbd_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="sabnzbd_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($sabnzbd_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">Headphones is installed with version: <?=$sabnzbd_curversion;?></p>
+		<? if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$sabnzbd_datasize?>
+		<? endif; ?>
+		<? if ($sabnzbd_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$sabnzbd_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$sabnzbd_plgver;?></b></p>
+		<? if (strcmp($sabnzbd_curversion, $sabnzbd_newversion)!=0 && $sabnzbd_curversion!="couldn't determine the Headphones version"): ?>
+			<center>
+				<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$sabnzbd_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left"><img src='/plugins/sabnzbd/new_config.png' class='icon'>Configuration:</span>
+	</div>
+	<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd">
+		<table class="settings">
+			<tr>
+				<td>Enable HeadPhones:</td>
+				<td>
+					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
+						<?=mk_option($sabnzbd_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($sabnzbd_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$sabnzbd_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$sabnzbd_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($sabnzbd_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($sabnzbd_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($sabnzbd_cfg['RUNAS'] != "root" && $sabnzbd_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$sabnzbd_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($sabnzbd_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($sabnzbd_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$sabnzbd_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($sabnzbd_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($sabnzbd_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$sabnzbd_cfg['PLG_DATACHECK'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
+			<button type="button" style="margin-bottom:8px" onClick="done();">Done</button>
+		</div>
+	</form>
+	<br />
+</div>
+<script type="text/javascript">
+function checkINSTALLDIR(form)
+{
+   if ("<?=$sabnzbd_running;?>" == "yes")
+   {
+		form.arg2.readOnly = true;
+		form.arg3.readOnly = true;
+		form.arg4.readOnly = true;
+		form.arg5.readOnly = true;
+		form.runas.disabled = true;
+		form.use_data.disabled = true;
+		form.storagesize.disabled = true;
+		form.datacheck.disabled = true;
+   }
+   else
+   {
+		form.arg2.readOnly = (form.arg1.value == "enable");
+		form.arg3.readOnly = (form.arg1.value == "enable");
+		form.arg4.readOnly = (form.arg1.value == "enable");
+		form.arg5.readOnly = (form.arg1.value == "enable");
+		form.runas.disabled = (form.arg1.value == "enable");
+		form.use_data.disabled = (form.arg1.value == "enable");
+		form.storagesize.disabled = (form.arg1.value == "enable");
+		form.datacheck.disabled = (form.arg1.value == "enable");		
+	}
+}
+
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$sabnzbd_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$sabnzbd_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
 	<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd">
 		<table class="settings">

@@ -65,6 +65,14 @@ rm /tmp/sabnzbd-cleanup
 </INLINE>
 </FILE>
 
+<FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
+<INLINE>
+<![CDATA[
+2.0
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/boot/config/plugins/sabnzbd/sabnzbd.cfg">
 <INLINE>
 <![CDATA[
@@ -115,12 +123,21 @@ sabnzbd_start()
 	echo "Starting SABnzbd: $CMDLINE"
 	sleep 1
 	$CMDLINE
-  
-	while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
-		sleep 1
-	done
-	echo "... OK"
-	sleep 1
+	
+  if [ -f /mnt/cache/apps/sab/sabnzbd.ini ]; then
+		chmod 777 "/mnt/cache/apps/sab/sabnzbd.ini"
+		HTTPS=`cat "/mnt/cache/apps/sab/sabnzbd.ini" | grep 'enable_https' | cut -d' ' -f3`
+			if [ $HTTPS = 0 ]; then
+				while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
+				sleep 1
+				done
+			elif [ $HTTPS = 1 ]; then
+				PORT=`cat "/mnt/cache/apps/sab/sabnzbd.ini" | grep 'https_port' | cut -d' ' -f3`
+				while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
+				sleep 1
+				done
+			fi
+	fi
 }
 
 sabnzbd_stop()
@@ -309,6 +326,31 @@ sabnzbd_datacheck()
 	done
 }
 
+sabnzbd_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f sabnzbd_unplugged.plg ]; then
+	mv sabnzbd_unplugged.plg sabnzbd_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/sabnzbd_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/sabnzbd_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
+	fi
+}
+sabnzbd_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f sabnzbd_unplugged.plg.old ]; then
+	rm -f /sabnzbd_unplugged.plg
+	mv sabnzbd_unplugged.plg.old sabnzbd_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
+	fi
+}
+
 # read our configuration
 source /boot/config/plugins/sabnzbd/sabnzbd.cfg
 if [ -e $DATADIR/sabnzbd.ini ]; then
@@ -345,8 +387,14 @@ case "$1" in
 	'datacheck')
 		sabnzbd_datacheck
 	;;
+	'updateplg')
+		sabnzbd_updateplg
+	;;
+	'downgradeplg')
+		sabnzbd_downgradeplg
+	;;
 	*)
-		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck"
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
 esac
 ]]>
 </INLINE>
@@ -375,22 +423,36 @@ Title="SABnzbd"
 <?PHP
 $sabnzbd_cfg = parse_ini_file( "/boot/config/plugins/sabnzbd/sabnzbd.cfg");
 $sabnzbd_installed = file_exists( $sabnzbd_cfg["INSTALLDIR"] . "/SABnzbd.py" ) ? "yes" : "no";
+$sabnzbd_rollback = file_exists( "boot/config/plugins/sabnzbd_unplugged.plg.old" ) ? "yes" : "no";
+$sabnzbd_plgver = shell_exec ( "cat /boot/config/plugins/sabnzbd/plgver.txt" );
 $sabnzbd_configfile = $sabnzbd_cfg["DATADIR"] . "/sabnzbd.ini";
-if ($sabnzbd_installed=="yes")
+if (file_exists("$sabnzbd_configfile"))
+$https = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'enable_https =' | cut -d' ' -f3" ));
+if ($sabnzbd_installed=="yes") 
 {
-	if (file_exists($sabnzbd_configfile))
+	if( (file_exists("$sabnzbd_configfile")) && ($https=="1")) {
+		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'https_port =' | cut -d' ' -f3" ));
+		print "$sab_port";
+	} else { 
 		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
+		print "$sab_port";
+			}
 	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sab_port.".pid") ? "yes" : "no";
-	if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes")
+			
+	if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes") {
 		$sabnzbd_datasize = shell_exec ( "/etc/rc.d/rc.sabnzbd storagesize $sabnzbd_cfg[INSTALLDIR] $sabnzbd_cfg[DATADIR]" );
-	if ($sabnzbd_cfg[PLG_DATACHECK]=="yes")
+		}
+	if ($sabnzbd_cfg[PLG_DATACHECK]=="yes") {
 		$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
+		}
 	$sabnzbd_curversion = shell_exec ( "python $sabnzbd_cfg[INSTALLDIR]/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21" );
 	$sabnzbd_newversion = shell_exec ( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk NR==1" );
-}
-else
+
+			}
+else {
 	if (file_exists("/boot/config/plugins/sabnzbd/sabnzbd.ini"))
 		$sab_port = trim(shell_exec( "cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
+}
 ?>
 
 <div style="width: 49%; float:left">
@@ -433,6 +495,27 @@ else
 			</form>
 		</div>
 	<?endif;?>
+	<? if ($sabnzbd_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="sabnzbd_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="sabnzbd_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="sabnzbd_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
 	<? if ($sabnzbd_installed=="yes"): ?>	
 		<center><hr size="3" width="50%" color="grey"></center>
 		<? if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes"): ?>
@@ -441,6 +524,7 @@ else
 		<? if ($sabnzbd_cfg[PLG_DATACHECK]=="yes"): ?>
 			<?=$sabnzbd_datacheck?>
 		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$sabnzbd_plgver;?></b></p>
 		<? if (strcmp($sabnzbd_curversion, $sabnzbd_newversion)!=0): ?>
 			<center>
 				<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">

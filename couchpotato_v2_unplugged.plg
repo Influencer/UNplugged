@@ -57,6 +57,14 @@ rm /tmp/couchpotato_v2-cleanup
 </INLINE>
 </FILE>
 
+<FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
+<INLINE>
+<![CDATA[
+2.0
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg">
 <INLINE>
 <![CDATA[
@@ -304,15 +312,27 @@ couchpotato_datacheck()
 
 couchpotato_updateplg()
 {
+<<<<<<< Updated upstream
+=======
+set -x
+>>>>>>> Stashed changes
 	cd /boot/config/plugins
 	if [ -f couchpotato_v2_unplugged.plg ]; then
 	mv couchpotato_v2_unplugged.plg couchpotato_v2_unplugged.plg.old
 	echo "Updating plugin"
+<<<<<<< Updated upstream
 	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/couchpotato_v2_unplugged.plg
 	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
 	else
 	echo "Updating plugin"
 	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/couchpotato_v2_unplugged.plg
+=======
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/couchpotato_v2_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/couchpotato_v2_unplugged.plg
+>>>>>>> Stashed changes
 	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
 	fi
 }
@@ -420,6 +440,8 @@ if ($couchpotato_installed=="yes")
 		$couchpotato_datasize = shell_exec ( "/etc/rc.d/rc.couchpotato_v2 storagesize $couchpotato_cfg[INSTALLDIR] $couchpotato_datadir" );
 	if ($couchpotato_cfg[PLG_DATACHECK]=="yes")
 		$couchpotato_datacheck = shell_exec ( "/etc/rc.d/rc.couchpotato_v2 datacheck" );
+	$couchpotato_plgver = shell_exec ( "cat /boot/config/plugins/couchpotato_v2/plgver.txt" );
+
 	if (file_exists("$couchpotato_datadir" . "/cache/version"))
 		$couchpotato_curversion = trim(shell_exec( "cat \"$couchpotato_datadir\"/cache/version | cut -d '\"' -f6- | sed 's/\(.*\)../\\1/'" ));
 	else
@@ -449,44 +471,58 @@ if (file_exists($couchpotato_configfile))
 		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
 			<form name="couchpotato_start_stop" method="POST" action="/update.htm" target="progressFrame">
 				<?if ($couchpotato_running=="yes"):?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 stop">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato stop">
 					<input type="submit" name="runCmd" value="Stop">
 				<?else:?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 start">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato start">
 					<input type="submit" name="runCmd" value="Start">
 				<?endif;?>
 			</form>
 		</div>
 		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
 			<form name="couchpotato_restart" method="POST" action="/update.htm" target="progressFrame">
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 restart">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato restart">
 					<input type="submit" name="runCmd" value="Restart">
 			</form>
 		</div>
 	<?else:?>
 		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 			<form name="couchpotato_install" method="POST" action="/update.htm" target="progressFrame">
-				<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 install">			
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato install">			
 				<input type="submit" name="runCmd" value="Install">
 			</form>
 		</div>
 	<?endif;?>
+<<<<<<< Updated upstream
 	<? if ($couchpotato_rollback=="yes"): ?>
 	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
 			<form name="couchpotato_update1" method="POST" action="/update.htm" target="progressFrame">
+=======
+	<? if ($couchpotato_v2_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="couchpotato_v2_update1" method="POST" action="/update.htm" target="progressFrame">
+>>>>>>> Stashed changes
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 updateplg">
 					<input type="submit" name="runCmd" value="Update PLG">
 			</form>
 	</div>
 	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+<<<<<<< Updated upstream
 		<form name="couchpotato_downgrade" method="POST" action="/update.htm" target="progressFrame">
+=======
+		<form name="couchpotato_v2_downgrade" method="POST" action="/update.htm" target="progressFrame">
+>>>>>>> Stashed changes
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 downgradeplg">
 					<input type="submit" name="runCmd" value="Downgrade PLG">
 			</form>
 	</div>
 	<?else:?>
 	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+<<<<<<< Updated upstream
 			<form name="couchpotato_update" method="POST" action="/update.htm" target="progressFrame">
+=======
+			<form name="couchpotato_v2_update" method="POST" action="/update.htm" target="progressFrame">
+>>>>>>> Stashed changes
 				<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 updateplg">			
 				<input type="submit" name="runCmd" value="Update PLG">
 			</form>
@@ -501,6 +537,7 @@ if (file_exists($couchpotato_configfile))
 		<? if ($couchpotato_cfg[PLG_DATACHECK]=="yes"): ?>
 			<?=$couchpotato_datacheck?>
 		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$couchpotato_plgver;?></b></p>
 		<? if (strcmp($couchpotato_curversion, $couchpotato_newversion)!=0 && $couchpotato_curversion!="couldn't determine the CouchPotato v2 version"): ?>
 			<center>
 				<form name="couchpotato_settings" method="POST" action="/update.htm" target="progressFrame">

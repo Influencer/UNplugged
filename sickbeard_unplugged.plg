@@ -299,6 +299,31 @@ sickbeard_datacheck()
 	done
 }
 
+sickbeard_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f sickbeard_unplugged.plg ]; then
+	mv sickbeard_unplugged.plg sickbeard_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/sickbeard_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/sickbeard_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/sickbeard_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/sickbeard_unplugged.plg
+	fi
+}
+sickbeard_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f sickbeard_unplugged.plg.old ]; then
+	rm -f /sickbeard_unplugged.plg
+	mv sickbeard_unplugged.plg.old sickbeard_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/sickbeard_unplugged.plg
+	fi
+}
+
 # read our configuration
 source /boot/config/plugins/sickbeard/sickbeard.cfg
 
@@ -330,8 +355,14 @@ case "$1" in
 	'datacheck')
 		sickbeard_datacheck
 	;;
+	'updateplg')
+		sickbeard_updateplg
+	;;
+	'downgradeplg')
+		sickbeard_downgradeplg
+	;;
 	*)
-		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck"
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
 esac
 ]]>
 </INLINE>
@@ -372,6 +403,7 @@ Title="SickBeard"
 <?PHP
 $sickbeard_cfg = parse_ini_file( "/boot/config/plugins/sickbeard/sickbeard.cfg" );
 $sickbeard_installed = file_exists( $sickbeard_cfg["INSTALLDIR"] . "/SickBeard.py" ) ? "yes" : "no";
+$sickbeard_rollback = file_exists( "boot/config/plugins/sickbeard_unplugged.plg.old" ) ? "yes" : "no";
 if ($sickbeard_installed=="yes")
 {
 	$sickbeard_running = file_exists( "/var/run/sickbeard/sickbeard.pid") ? "yes" : "no";
@@ -428,6 +460,27 @@ if ($sickbeard_installed=="yes")
 			</form>
 		</div>
 	<?endif;?>
+	<? if ($sickbeard_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="sickbeard_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="sickbeard_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="sickbeard_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
 	<? if ($sickbeard_installed=="yes"): ?>	
 		<center><hr size="3" width="50%" color="grey"></center>
 		<p style="margin-left:10px;">Installed from <?=$sickbeard_cfg[BRANCH]?> branch of <?=$sickbeard_cfg[INSTALLURL]?> site</p>
