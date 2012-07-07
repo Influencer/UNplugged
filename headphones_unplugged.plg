@@ -298,11 +298,11 @@ headphones_updateplg()
 	if [ -f headphones_unplugged.plg ]; then
 	mv headphones_unplugged.plg headphones_unplugged.plg.old
 	echo "Updating plugin"
-	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/headphones_unplugged.plg
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/headphones_unplugged.plg
 	/usr/local/sbin/installplg /boot/config/plugins/headphones_unplugged.plg
 	else
 	echo "Updating plugin"
-	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/headphones_unplugged.plg
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/headphones_unplugged.plg
 	/usr/local/sbin/installplg /boot/config/plugins/headphones_unplugged.plg
 	fi
 }
@@ -395,6 +395,7 @@ Title="Headphones"
 <?PHP
 $headphones_cfg = parse_ini_file( "/boot/config/plugins/headphones/headphones.cfg");
 $headphones_installed = file_exists( $headphones_cfg["INSTALLDIR"] . "/Headphones.py" ) ? "yes" : "no";
+$headphones_rollback = file_exists( "boot/config/plugins/headphones_unplugged.plg.old" ) ? "yes" : "no";
 if ($headphones_installed=="yes")
 {
 	if ($headphones_cfg[PLG_STORAGESIZE]=="yes")
