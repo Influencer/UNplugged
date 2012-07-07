@@ -33,6 +33,15 @@ I have...
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
 <MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
 </FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
 
 <FILE Name="/boot/config/plugins/headphones/headphones.png">
 <URL>http://img513.imageshack.us/img513/3190/headphoneslogo.png</URL>
@@ -44,7 +53,16 @@ I have...
 <![CDATA[
 rm -f /etc/rc.d/rc.headphones
 rm -f -R /usr/local/emhttp/plugins/headphones
+rm -f /boot/config/plugins/headphones/plgver.txt
 rm /tmp/headphones-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/headphones/plgver.txt">
+<INLINE>
+<![CDATA[
+1.5
 ]]>
 </INLINE>
 </FILE>
@@ -58,9 +76,13 @@ INSTALLDIR="/usr/local/headphones"
 DATADIR="/usr/local/headphones"
 PORT="8084"
 RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
 ]]>
 </INLINE>
 </FILE>
+
+
 
 <FILE Name="/etc/rc.d/rc.headphones" Mode="0770">
 <INLINE>
@@ -149,6 +171,9 @@ write_config()
 	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/headphones/headphones.cfg
 	echo "PORT=\"$PORT\"" >> /boot/config/plugins/headphones/headphones.cfg
 	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/headphones/headphones.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/headphones/headphones.cfg
+	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/headphones/headphones.cfg
+
  }
 
 headphones_enable()
@@ -170,6 +195,8 @@ headphones_enable()
 		fi
 	
 		RUNAS="$1"
+		PLG_STORAGESIZE="$5"
+		PLG_DATACHECK="$6"
 	
 		# create headphones user if necessary
 		if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
@@ -215,6 +242,37 @@ headphones_install()
 	rm -Rf /tmp/headphones
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 }
+
+headphones_storagesize() 
+{
+	if [ $1 ] && [ $2 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+	
+		if [ -d $2 ]; then
+			DAT=`du -sh $2 | cut -f1`
+		elif [ -f $2 ]; then
+			DAT=`ls -lah $2 | awk '{ print $5}'`
+		fi
+		
+		if [ $1 == $2 ]; then
+			echo "<p style="margin-left:10px\;">Storage memory usage: install + data directory: <b>$INST</b></p>"
+		else
+			echo "<p style="margin-left:10px\;">Storage memory usage: install directory: <b>$INST</b>, data directory: <b>$DAT</b></p>"
+		fi
+	elif [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
 headphones_datacheck() 
 {
 	array=( ramfs proc tempfs sysfs )
@@ -233,6 +291,32 @@ headphones_datacheck()
 		fi
 	done
 }
+
+headphones_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f headphones_unplugged.plg ]; then
+	mv headphones_unplugged.plg headphones_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/headphones_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/headphones_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/headphones_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/headphones_unplugged.plg
+	fi
+}
+headphones_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f headphones_unplugged.plg.old ]; then
+	rm -f /headphones_unplugged.plg
+	mv headphones_unplugged.plg.old headphones_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/headphones_unplugged.plg
+	fi
+}
+
 # read our configuration
 source /boot/config/plugins/headphones/headphones.cfg
 
@@ -247,7 +331,7 @@ case "$1" in
 		headphones_restart
 	;;
 	'enable')
-		headphones_enable $2 $3 $4 $5
+		headphones_enable $2 $3 $4 $5 $6 $7 $8
 	;;
 	'disable')
 		headphones_disable
@@ -258,11 +342,20 @@ case "$1" in
 	'update')
 		headphones_update
 	;;
+	'storagesize')
+		headphones_storagesize $2 $3
+	;;
 	'datacheck')
 		headphones_datacheck
 	;;
+	'updateplg')
+		headphones_updateplg
+	;;
+	'downgradeplg')
+		headphones_downgradeplg
+	;;
 	*)
-		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck"
+		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
 esac
 ]]>
 </INLINE>
@@ -285,6 +378,17 @@ Title="Headphones"
 <LOCAL>/boot/config/plugins/headphones/headphones.png</LOCAL>
 </FILE>
 
+<FILE Name="/usr/local/emhttp/plugins/headphones/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/headphones/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/headphones/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
 <FILE Name="/usr/local/emhttp/plugins/headphones/headphones.php">
 <INLINE>
 <![CDATA[
@@ -293,10 +397,14 @@ $headphones_cfg = parse_ini_file( "/boot/config/plugins/headphones/headphones.cf
 $headphones_installed = file_exists( $headphones_cfg["INSTALLDIR"] . "/Headphones.py" ) ? "yes" : "no";
 if ($headphones_installed=="yes")
 {
-	$headphones_datacheck = shell_exec ( "/etc/rc.d/rc.headphones datacheck" );
+	if ($headphones_cfg[PLG_STORAGESIZE]=="yes")
+		$headphones_datasize = shell_exec ( "/etc/rc.d/rc.headphones storagesize $headphones_cfg[INSTALLDIR] $headphones_cfg[DATADIR]" );
+	if ($headphones_cfg[PLG_DATACHECK]=="yes")
+		$headphones_datacheck = shell_exec ( "/etc/rc.d/rc.headphones datacheck" );
+	$headphones_plgver = shell_exec ( "cat /boot/config/plugins/headphones/plgver.txt" );
 	$headphones_running = file_exists( "/var/run/headphones/headphones-".$headphones_cfg['PORT'].".pid") ? "yes" : "no";
-	if (file_exists($headphones_cfg["DATADIR"] . "/version.txt"))
-		$headphones_curversion = trim(shell_exec( "cat $headphones_cfg[DATADIR]/version.txt" ));
+	if (file_exists($headphones_cfg["INSTALLDIR"] . "/version.txt"))
+		$headphones_curversion = trim(shell_exec( "cat $headphones_cfg[INSTALLDIR]/version.txt" ));
 	else
 		$headphones_curversion = "couldn't determine the Headphones version, please run Update at the bottom of the Headphones web page first"; 
 	$headphones_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/rembo10/headphones/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
@@ -304,13 +412,100 @@ if ($headphones_installed=="yes")
 	$headphones_datadirsize = trim(shell_exec( "if [ -e $headphones_cfg[DATADIR] ]; then du -sh $headphones_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
 }
 ?>
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left"><img src='/plugins/headphones/device_status.png' class='icon'>Status:
+			<?if ($headphones_installed=="yes"):?>	
+				<?if ($headphones_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$headphones_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$headphones_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($headphones_installed=="yes"):?>
+		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+			<form name="headphones_start_stop" method="POST" action="/update.htm" target="progressFrame">
+				<?if ($headphones_running=="yes"):?>
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones stop">
+					<input type="submit" name="runCmd" value="Stop">
+				<?else:?>
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones start">
+					<input type="submit" name="runCmd" value="Start">
+				<?endif;?>
+			</form>
+		</div>
+		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+			<form name="headphones_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones restart">
+					<input type="submit" name="runCmd" value="Restart">
+			</form>
+		</div>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="headphones_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($headphones_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="headphones_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="headphones_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="headphones_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($headphones_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">Headphones is installed with version: <?=$headphones_curversion;?></p>
+		<? if ($headphones_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$headphones_datasize?>
+		<? endif; ?>
+		<? if ($headphones_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$headphones_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$headphones_plgver;?></b></p>
+		<? if (strcmp($headphones_curversion, $headphones_newversion)!=0 && $headphones_curversion!="couldn't determine the Headphones version"): ?>
+			<center>
+				<form name="headphones_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$headphones_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left"><img src='/plugins/headphones/new_config.png' class='icon'>Configuration:</span>
+	</div>
 	<form name="headphones_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones">
 		<table class="settings">
 			<tr>
-				<td>Enable Headphones:</td>
+				<td>Enable HeadPhones:</td>
 				<td>
-					<select name="arg1" size="1" onChange="checkINSTALLDIR(this.form);">
+					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
 						<?=mk_option($headphones_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($headphones_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -322,7 +517,7 @@ if ($headphones_installed=="yes")
 			</tr>
 			<tr>
 				<td>Data directory:</td>
-				<td><input type="checkbox" name="use_data" <?=($headphones_cfg['DATADIR']!=$headphones_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?>  onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" maxlength="60" value="<?=$headphones_cfg['DATADIR'];?>"></td>
+				<td><input type="checkbox" name="use_data" <?=($headphones_cfg['DATADIR']!=$headphones_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$headphones_cfg['DATADIR'];?>"></td>
 			</tr>
 			<tr>
 				<td>Port:</td>
@@ -331,52 +526,44 @@ if ($headphones_installed=="yes")
 			<tr>
 				<td>Run as user:</td>
 				<td>
-					<select name="runas" size="1"  onChange="checkUSER(this.form);">
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
 						<?=mk_option($headphones_cfg['RUNAS'], "nobody", "nobody");?>
 						<?=mk_option($headphones_cfg['RUNAS'], "root", "root");?>
 						<option value='other'<?=($headphones_cfg['RUNAS'] != "root" && $headphones_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
 					</select>
-					<input type="text" name="arg2" maxlength="40" value="<?=$headphones_cfg['RUNAS'];?>">
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$headphones_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($headphones_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($headphones_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$headphones_cfg['PLG_STORAGESIZE'];?>">
 				</td>
 			</tr>
 			<tr>
-				<td></td>
-				<td><input type="submit" name="runCmd" value="Apply"><button type="button" onClick="done();">Done</button></td>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($headphones_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($headphones_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$headphones_cfg['PLG_DATACHECK'];?>">
+				</td>
 			</tr>
 		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
+			<button type="button" style="margin-bottom:8px" onClick="done();">Done</button>
+		</div>
 	</form>
-	<hr>
-<div id="title"><span class="left">Status:
-<?if ($headphones_running=="yes"):?>
-  <a href="http://<?=$var['NAME'];?>:<?=$headphones_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span> with version: <b><?=$headphones_curversion;?></b></span>
-<?else:?>
-  <span class="red"><b>STOPPED</b></span>
-<?endif;?>
-</span></div>
-<? if ($headphones_installed=="yes"): ?>	
-	<? if ($headphones_installdirsize!=0 && $headphones_installdirsize!=""): ?>
-		<? if ($headphones_cfg["INSTALLDIR"] == $headphones_cfg["DATADIR"]): ?>
-			<p style="margin-left:10px;">Headphones storage memory usage: install + data directory: <b><?=$headphones_installdirsize?></b></p>
-		<? else: ?>
-			<p style="margin-left:10px;">Headphones storage memory usage: install directory: <b><?=$headphones_installdirsize?></b>, data directory: <b><?=$headphones_datadirsize?></b></p>
-		<? endif; ?>
-	<? endif; ?>
-	<?=$headphones_datacheck?>
-	<? if (strcmp($headphones_curversion, $headphones_newversion)!=0 && $headphones_curversion!="couldn't determine the Headphones version, please run Update at the bottom of the Headphones web page first"): ?>
-		<form name="headphones_settings" method="POST" action="/update.htm" target="progressFrame">
-			<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones update">
-			<p style="font-size:14px;color:blue;margin-left:10px;">Update available to version: <b><?=$headphones_newversion;?></b></p>
-			<table style="align:center;">
-				<tr>
-					<td><input type="submit" name="runCmd" value="Update"><button type="button" onClick="done();">Done</button></td>
-				</tr>
-			</table>
-		</form>	 
-	<? endif; ?>
-<? else: ?>
-	<p style="margin-left:10px;"><b>Headphones is not installed</b></p>
-<? endif; ?>	
-
+	<br />
+</div>
 <script type="text/javascript">
 function checkINSTALLDIR(form)
 {
@@ -388,6 +575,8 @@ function checkINSTALLDIR(form)
 		form.arg5.readOnly = true;
 		form.runas.disabled = true;
 		form.use_data.disabled = true;
+		form.storagesize.disabled = true;
+		form.datacheck.disabled = true;
    }
    else
    {
@@ -397,6 +586,8 @@ function checkINSTALLDIR(form)
 		form.arg5.readOnly = (form.arg1.value == "enable");
 		form.runas.disabled = (form.arg1.value == "enable");
 		form.use_data.disabled = (form.arg1.value == "enable");
+		form.storagesize.disabled = (form.arg1.value == "enable");
+		form.datacheck.disabled = (form.arg1.value == "enable");		
 	}
 }
 
@@ -428,9 +619,20 @@ function checkDATADIR(form)
 	}
 }
 
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
 checkINSTALLDIR(document.headphones_settings);
 checkUSER(document.headphones_settings);
 checkDATADIR(document.headphones_settings);
+checkSTORAGE(document.headphones_settings);
+checkDATA(document.headphones_settings);
 </script>
 ]]>
 </INLINE>

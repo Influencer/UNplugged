@@ -21,19 +21,23 @@ Although unRAID is considered by some to be a "enthusiast" OS, and that many use
 
 I hope you enjoy my releases, and as always, if there are any suggestions, feel free to let me know.
 
-If you like my work, feel free to donate. I will NEVER ask for donations.
+If you like my work, feel free to donate. I will NEVER require a donation or payment.
 
 [DONATE](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2679NHED2LCHG)
 
 ###Downloads:
 Right click and save link as;
 
--  [Couchpotato_v2_unplugged.plg](https://github.com/influencer/unplugged/raw/master/couchpotato_v2.plg)
--  [Sabnzbd_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sabnzbd_mod.plg)
--  [Sickbeard_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sickbeard_mod.plg)
--  [Headphones_unplugged.plg](https://github.com/influencer/unplugged/raw/master/headphones_mod.plg)
--  [Darkstat-1.9_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_mod.plg)
+-  [Couchpotato_v2_unplugged.plg](https://github.com/influencer/unplugged/raw/master/couchpotato_v2_unplugged.plg)
+-  [Sabnzbd_hardcoded.plg](https://github.com/Influencer/UNplugged/raw/master/sabnzbd_hardcoded.plg)
+-  [Sabnzbd_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sabnzbd_unplugged.plg)
+-  [Sickbeard_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sickbeard_unplugged.plg)
+-  [Headphones_unplugged.plg](https://github.com/influencer/unplugged/raw/master/headphones_unplugged.plg)
+-  [Darkstat-1.9_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_unplugged.plg)
 
 ###Special Thanks:
 
-wjd85 for donation
+* wjd85 for donation
+* Sweigh for donation
+* mdm144 for donation
+* K. Tobler for donation

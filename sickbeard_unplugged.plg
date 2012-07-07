@@ -62,6 +62,14 @@ rm /tmp/sickbeard-cleanup
 </INLINE>
 </FILE>
 
+<FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
+<INLINE>
+<![CDATA[
+2.0
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/boot/config/plugins/sickbeard/sickbeard.cfg">
 <INLINE>
 <![CDATA[
@@ -371,6 +379,7 @@ if ($sickbeard_installed=="yes")
 		$sickbeard_datasize = shell_exec ( "/etc/rc.d/rc.sickbeard storagesize $sickbeard_cfg[INSTALLDIR] $sickbeard_cfg[DATADIR]" );
 	if ($sickbeard_cfg[PLG_DATACHECK]=="yes")
 		$sickbeard_datacheck = shell_exec ( "/etc/rc.d/rc.sickbeard datacheck" );
+	$sickbeard_plgver = shell_exec ( "cat /boot/config/plugins/sickbeard/plgver.txt" );
 	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/version.txt"))
 		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[INSTALLDIR]/version.txt" ));
 	else
@@ -428,6 +437,7 @@ if ($sickbeard_installed=="yes")
 		<? if ($sickbeard_cfg[PLG_DATACHECK]=="yes"): ?>
 			<?=$sickbeard_datacheck?>
 		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$sickbeard_plgver;?></b></p>
 		<? if (strcmp($sickbeard_curversion, $sickbeard_newversion)!=0 && $sickbeard_curversion!="couldn't determine the SickBeard version"): ?>
 			<center>
 				<form name="sickbeard_settings" method="POST" action="/update.htm" target="progressFrame">
