@@ -616,9 +616,9 @@ if (file_exists($couchpotato_configfile))
 			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
 			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
 			<? if ($couchpotato_installed=="no"): ?>
-				<input type="button" value="Show advanced configuration" style="margin-bottom:8px" onClick="if (this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display != '') { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = ''; this.innerText = ''; this.value = 'Hide advanced configuration'; } else { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = 'none'; this.innerText = ''; this.value = 'Show advanced configuration'; }">
+				<input type="button" value="Show advanced configuration" style="margin-bottom:35px" onClick="if (this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display != '') { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = ''; this.innerText = ''; this.value = 'Hide advanced configuration'; } else { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = 'none'; this.innerText = ''; this.value = 'Show advanced configuration'; }">
 			<? endif; ?>
-			<button type="button" style="margin-bottom:8px" onClick="done();">Done</button>
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
 		</div>
 		<div>
 			<div style="display: none;">
