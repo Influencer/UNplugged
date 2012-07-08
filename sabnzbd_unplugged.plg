@@ -597,8 +597,8 @@ else {
 		</table>
 		<div align="center">
 			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
-			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:20px">
-			<button type="button" style="margin-bottom:20px" onClick="done();">Done</button>
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:35px">
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
 		</div>
 	</form>
 	<br />
