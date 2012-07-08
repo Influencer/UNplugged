@@ -52,6 +52,7 @@ I have...
 <![CDATA[
 [ -d /usr/local/emhttp/plugins/couchpotato_v2 ] && rm -f -R /usr/local/emhttp/plugins/couchpotato_v2
 [ -f /etc/rc.d/rc.couchpotato_v2 ] && rm -f /etc/rc.d/rc.couchpotato_v2
+[ -f /boot/config/plugins/couchpotato_v2/plgver.txt ] && rm -f /boot/config/plugins/couchpotato_v2/plgver.txt
 rm /tmp/couchpotato_v2-cleanup
 ]]>
 </INLINE>
@@ -60,7 +61,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.0
+2.1
 ]]>
 </INLINE>
 </FILE>
@@ -331,6 +332,7 @@ couchpotato_updateplg()
 {
 set -x
 	cd /boot/config/plugins
+	[ -f couchpotato_v2_unplugged.plg.old ] && rm -f couchpotato_v2_unplugged.plg.old
 	if [ -f couchpotato_v2_unplugged.plg ]; then
 	mv couchpotato_v2_unplugged.plg couchpotato_v2_unplugged.plg.old
 	echo "Updating plugin"
@@ -439,7 +441,7 @@ Title="CouchPotato v2"
 <?PHP
 $couchpotato_cfg = parse_ini_file( "/boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg");
 $couchpotato_installed = file_exists( $couchpotato_cfg["INSTALLDIR"] . "/CouchPotato.py" ) ? "yes" : "no";
-$couchpotato_rollback = file_exists( "boot/config/plugins/couchpotato_v2_unplugged.plg.old" ) ? "yes" : "no";
+$couchpotato_rollback = file_exists( "/boot/config/plugins/couchpotato_v2_unplugged.plg.old" ) ? "yes" : "no";
 $couchpotato_configfile = $couchpotato_cfg["CONFIGFILE"];
 $couchpotato_datadir = trim(shell_exec( "cat \"$couchpotato_configfile\" | grep 'data_dir' | cut -d' ' -f3" ));
 if ($couchpotato_installed=="yes")
@@ -506,7 +508,7 @@ if (file_exists($couchpotato_configfile))
 			</form>
 		</div>
 		<?endif;?>
-	<? if ($couchpotato_v2_rollback=="yes"): ?>
+	<? if ($couchpotato_rollback=="yes"): ?>
 	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
 			<form name="couchpotato_v2_update1" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 updateplg">
