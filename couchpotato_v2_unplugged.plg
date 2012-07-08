@@ -101,10 +101,10 @@ port = 8082
 # start|stop|restart|enable|disable|install|update|storagesize|datacheck CouchPotato v2
 
 couchpotato_start()
-{
+{ set -x
 	# no-op if not enabled
 	if [ $SERVICE != "enable" ]; then
-		return
+		sed -i "s/"disable"/"enable/"" $CONFIG	
 	fi
   
 	# no-op if already running
@@ -154,6 +154,18 @@ couchpotato_restart()
 	couchpotato_stop
 	sleep 1
 	couchpotato_start
+}
+couchpotato_buttonstart()
+{
+set -x
+echo "Enabling couchpotato"
+	CONFIG="/boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting couchpotato"
+	couchpotato_start
+	fi
 }
 
 couchpotato_update()
@@ -215,14 +227,19 @@ couchpotato_change_settings()
 couchpotato_enable()
 {
 	# if not already enabled, enable it
-	if [ "$SERVICE" != "enable" ]; then
 		SERVICE=enable
+		if [ $PORT != $2 ];then
 		couchpotato_change_settings $1 $2 $3 $4 $5 $6 $7 $8
 		write_config
-	fi
-
+        couchpotato_restart
+		else
+		couchpotato_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+		fi
 	# enabling also starts it
+	if [ ! -f /var/run/couchpotato_v2/couchpotato_v2.pid ]; then
 	couchpotato_start
+	fi
 }
 
 couchpotato_disable()
@@ -377,6 +394,9 @@ case "$1" in
 	'downgradeplg')
 		couchpotato_downgradeplg
 	;;
+	'buttonstart')
+		couchpotato_buttonstart
+	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
 esac
@@ -444,7 +464,7 @@ if (file_exists($couchpotato_configfile))
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/couchpotato_v2/device_status.png' class='icon'>Status:
+		<span class="left">Status:&#32;<img src='/plugins/couchpotato_v2/device_status.png'>
 			<?if ($couchpotato_installed=="yes"):?>	
 				<?if ($couchpotato_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$couch_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$couchpotato_curversion?></b></span>
@@ -456,32 +476,36 @@ if (file_exists($couchpotato_configfile))
 			<?endif;?>	
 		</span>
 	</div>	
-	<?if ($couchpotato_installed=="yes"):?>
-		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
-			<form name="couchpotato_start_stop" method="POST" action="/update.htm" target="progressFrame">
-				<?if ($couchpotato_running=="yes"):?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato stop">
-					<input type="submit" name="runCmd" value="Stop">
-				<?else:?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato start">
-					<input type="submit" name="runCmd" value="Start">
-				<?endif;?>
-			</form>
-		</div>
-		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
-			<form name="couchpotato_restart" method="POST" action="/update.htm" target="progressFrame">
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato restart">
-					<input type="submit" name="runCmd" value="Restart">
-			</form>
-		</div>
-	<?else:?>
+		<?if ($couchpotato_installed=="yes"):?>
+			<?if ($couchpotato_running=="yes"):?>	
+				<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+					<form name="couchpotato_stop" method="POST" action="/update.htm" target="progressFrame">
+						<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 stop">
+						<input type="submit" name="runCmd" value="Stop">
+					</form>
+				</div>
+				<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+					<form name="couchpotato_restart" method="POST" action="/update.htm" target="progressFrame">
+						<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 restart">
+						<input type="submit" name="runCmd" value="Restart">
+					</form>
+				</div>
+			<?else:?>
+				<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+					<form name="couchpotato_buttonstart" method="POST" action="/update.htm" target="progressFrame">
+						<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 buttonstart">
+						<input type="submit" name="runCmd" value="Start">
+					</form>
+				</div>
+			<?endif;?>
+		<?else:?>
 		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 			<form name="couchpotato_install" method="POST" action="/update.htm" target="progressFrame">
-				<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato install">			
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 install">			
 				<input type="submit" name="runCmd" value="Install">
 			</form>
 		</div>
-	<?endif;?>
+		<?endif;?>
 	<? if ($couchpotato_v2_rollback=="yes"): ?>
 	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
 			<form name="couchpotato_v2_update1" method="POST" action="/update.htm" target="progressFrame">
@@ -527,7 +551,7 @@ if (file_exists($couchpotato_configfile))
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/couchpotato_v2/new_config.png' class='icon'>Configuration:</span>
+		<span class="left">Configuration:&#32;<img src='/plugins/couchpotato_v2/new_config.png'></span>
 	</div>
 	<form name="couchpotato_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2">
@@ -535,7 +559,7 @@ if (file_exists($couchpotato_configfile))
 			<tr>
 				<td>Enable CouchPotato v2:</td>
 				<td>
-					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
+					<select name="arg1" size="1">
 						<?=mk_option($couchpotato_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($couchpotato_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -665,20 +689,7 @@ function checkRUNNING(form)
 		form.branch.disabled = (form.arg1.value == "enable");
    }
 }
-
-function checkUSER(form)
-{
-	if (form.runas.selectedIndex < 2 )
-	{
-		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
-		form.arg2.type = "hidden";
-	}
-	else
-	{
-		form.arg2.value = "<?=$couchpotato_cfg['RUNAS'];?>";
-		form.arg2.type = "text";
-	}
-}
+ 
 
 function checkDATADIR(form)
 {
@@ -732,7 +743,6 @@ function checkBRANCH(form)
 	}
 }
 
-checkRUNNING(document.couchpotato_settings);
 checkUSER(document.couchpotato_settings);
 checkDATADIR(document.couchpotato_settings);
 checkSTORAGE(document.couchpotato_settings);
@@ -777,6 +787,9 @@ if [ ! -e /var/run/couchpotato_v2 ]; then
   chmod 0777 /var/run/couchpotato_v2
 fi
 
+if [ -e $INSTALLDIR ]; then
+chmod -R 0777 $INSTALLDIR
+fi
 rm /tmp/couchpotato_v2-install
 ]]>
 </INLINE>
