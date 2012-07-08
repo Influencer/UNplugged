@@ -432,10 +432,8 @@ if ($sabnzbd_installed=="yes")
 {
 	if( (file_exists("$sabnzbd_configfile")) && ($https=="1")) {
 		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'https_port =' | cut -d' ' -f3" ));
-		print "$sab_port";
 	} else { 
 		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
-		print "$sab_port";
 			}
 	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sab_port.".pid") ? "yes" : "no";
 			
@@ -599,8 +597,8 @@ else {
 		</table>
 		<div align="center">
 			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
-			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
-			<button type="button" style="margin-bottom:8px" onClick="done();">Done</button>
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:20px">
+			<button type="button" style="margin-bottom:20px" onClick="done();">Done</button>
 		</div>
 	</form>
 	<br />
