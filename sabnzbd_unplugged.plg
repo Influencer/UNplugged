@@ -53,6 +53,15 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <FILE Name="/boot/config/plugins/sabnzbd/sabnzbd.png">
 <URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/sabnzbd.png</URL>
 </FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
 
 <!-- clean up previous install -->
 <FILE Name="/tmp/sabnzbd-cleanup" Run="/bin/bash">
@@ -430,6 +439,18 @@ Title="SABnzbd"
 <LOCAL>/boot/config/plugins/sabnzbd/sabnzbd.png</LOCAL>
 </FILE>
 
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/sabnzbd/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+
 <FILE Name="/usr/local/emhttp/plugins/sabnzbd/sabnzbd.php">
 <INLINE>
 <![CDATA[
@@ -468,7 +489,7 @@ else {
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/simpleFeatures/icons/device_status.png' class='icon'>Status:
+		<span class="left"><img src='/plugins/sabnzbd/device_status.png' class='icon'>Status:
 			<?if ($sabnzbd_installed=="yes"):?>	
 				<?if ($sabnzbd_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$sab_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>
@@ -550,7 +571,7 @@ else {
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/simpleFeatures/icons/new_config.png' class='icon'>Configuration:</span>
+		<span class="left"><img src='/plugins/sabnzbd/new_config.png' class='icon'>Configuration:</span>
 	</div>
 	<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd">
