@@ -113,8 +113,16 @@ sickbeard_start()
 	sleep 1
 	$CMDLINE
   
+	TIMER=0
 	while [ ! -e /var/run/sickbeard/sickbeard.pid ]; do
 		sleep 1
+		let TIMER=$TIMER+1
+	        echo -n $TIMER
+	        if [ $TIMER -gt 10 ]; then
+        	        echo -n "transmission.pid not deleted for some reason"
+                	break
+        	fi
+
 	done
 	echo "... OK"
 	sleep 1
