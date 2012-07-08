@@ -119,7 +119,7 @@ sickbeard_start()
 		let TIMER=$TIMER+1
 	        echo -n $TIMER
 	        if [ $TIMER -gt 10 ]; then
-        	        echo -n "transmission.pid not deleted for some reason"
+        	        echo -n "sickbeard.pid not created for some reason"
                 	break
         	fi
 
