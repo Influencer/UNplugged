@@ -145,7 +145,7 @@ sabnzbd_start()
 				sleep 1
 				let TIMER=$TIMER+1
 				if [ $TIMER -gt 10 ]; then
-					echo -n "transmission.pid not created for some reason"
+					echo -n "sabnzbd-$PORT.pid not created for some reason"
 					break
 				fi
 				done
