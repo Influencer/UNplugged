@@ -29,7 +29,6 @@ If you like my work, feel free to donate. I will NEVER require a donation or pay
 Right click and save link as;
 
 -  [Couchpotato_v2_unplugged.plg](https://github.com/influencer/unplugged/raw/master/couchpotato_v2_unplugged.plg)
--  [Sabnzbd_hardcoded.plg](https://github.com/Influencer/UNplugged/raw/master/sabnzbd_hardcoded.plg)
 -  [Sabnzbd_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sabnzbd_unplugged.plg)
 -  [Sickbeard_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sickbeard_unplugged.plg)
 -  [Headphones_unplugged.plg](https://github.com/influencer/unplugged/raw/master/headphones_unplugged.plg)
