@@ -102,7 +102,7 @@ port = 8082
 # start|stop|restart|enable|disable|install|update|storagesize|datacheck CouchPotato v2
 
 couchpotato_start()
-{ set -x
+{ 
 	# no-op if not enabled
 	if [ $SERVICE != "enable" ]; then
 		sed -i "s/"disable"/"enable/"" $CONFIG	
@@ -158,7 +158,6 @@ couchpotato_restart()
 }
 couchpotato_buttonstart()
 {
-set -x
 echo "Enabling couchpotato"
 	CONFIG="/boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg"
 	if [ -f $CONFIG ]; then
@@ -330,7 +329,6 @@ couchpotato_datacheck()
 
 couchpotato_updateplg()
 {
-set -x
 	cd /boot/config/plugins
 	[ -f couchpotato_v2_unplugged.plg.old ] && rm -f couchpotato_v2_unplugged.plg.old
 	if [ -f couchpotato_v2_unplugged.plg ]; then

@@ -62,7 +62,7 @@ rm /tmp/headphones-cleanup
 <FILE Name="/boot/config/plugins/headphones/plgver.txt">
 <INLINE>
 <![CDATA[
-1.5
+1.6
 ]]>
 </INLINE>
 </FILE>
@@ -94,7 +94,7 @@ headphones_start()
 {
 	# no-op if not enabled
 	if [ $SERVICE != "enable" ]; then
-		return
+		sed -i "s/"disable"/"enable/"" $CONFIG	
 	fi
 
 	# no-op if already running
@@ -121,6 +121,8 @@ headphones_start()
 	while [ ! -e /var/run/headphones/headphones-$PORT.pid  ]; do
 		sleep 1
 	done
+	echo "... OK"
+	sleep 1
 }
 
 headphones_stop()
@@ -130,13 +132,10 @@ headphones_stop()
 		return
 	fi
 	
-	echo -n "Stopping headphones..."
-	sleep 0.5
- 	echo
-	kill $(cat /var/run/headphones/headphones-$PORT.pid)
-	echo
-  
+	echo "Stopping headphones..."
 	sleep 1
+	kill $(cat /var/run/headphones/headphones-$PORT.pid)
+	sleep 3
   
 	if [ -f /var/run/headphones/headphones-$PORT.pid ]; then
 		rm /var/run/headphones/headphones-$PORT.pid
@@ -145,6 +144,8 @@ headphones_stop()
 	while [ -e /var/run/headphones/headphones-$PORT.pid  ]; do
 		sleep 1
 	done
+	echo "... OK"
+	sleep 1
 }
 
 headphones_restart()
@@ -152,6 +153,18 @@ headphones_restart()
 	headphones_stop
 	sleep 1
 	headphones_start
+}
+
+headphones_buttonstart()
+{
+echo "Enabling Headphones"
+	CONFIG="/boot/config/plugins/headphones/headphones.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting headphones"
+	headphones_start
+	fi
 }
 
 headphones_update()
@@ -176,47 +189,56 @@ write_config()
 
  }
 
+headphones_change_settings()
+{
+	PORT="$2"
+	INSTALLDIR="$3"
+	DATADIR="$4"
+	
+	if [ $DATADIR == "" ]; then
+		$DATADIR="$INSTALLDIR"
+	fi
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$INSTALLDIR" "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$5"
+	PLG_DATACHECK="$6"
+	
+	# create Headphones user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
 headphones_enable()
 {
 	# if not already enabled, enable it
-	if [ "$SERVICE" != "enable" ]; then
 		SERVICE=enable
-  
-		PORT="$2"
-		INSTALLDIR="$3"
-		DATADIR="$4"
-
-		if [ $DATADIR == "" ]; then
-			$DATADIR=$INSTALLDIR
-		fi
-	
-		if [ $RUNAS != $1 ]; then
-			chown -R $1:users "$INSTALLDIR"
-		fi
-	
-		RUNAS="$1"
-		PLG_STORAGESIZE="$5"
-		PLG_DATACHECK="$6"
-	
-		# create headphones user if necessary
-		if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
-			if ( ! grep -q ^$RUNAS /etc/passwd ); then
-				useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
-				cp /etc/passwd /etc/shadow /boot/config
-			fi
-		fi
-	
+		if [ $PORT != $2 ];then
+		headphones_change_settings $1 $2 $3 $4 $5 $6 $7 $8
 		write_config
-	fi
-
+        headphones_restart
+		else
+		headphones_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+		fi
 	# enabling also starts it
+	if [ ! -f /var/run/headphones/headphones.pid ]; then
 	headphones_start
+	fi
 }
 
 headphones_disable()
 {
 	headphones_stop
 	SERVICE=disable
+	headphones_change_settings $1 $2 $3 $4 $5 $6 $7 $8
 	write_config
 }
 
@@ -232,7 +254,6 @@ headphones_install()
     fi
 	
 	if [ -e ""$DATADIR"/version.txt" ]; then 
-		echo "removing old version"
 		rm ""$DATADIR"/version.txt"
 	fi
 	
@@ -296,6 +317,7 @@ headphones_updateplg()
 {
 	cd /boot/config/plugins
 	if [ -f headphones_unplugged.plg ]; then
+	[ -f headphones_unplugged.plg.old ] && rm -f headphones_unplugged.plg.old
 	mv headphones_unplugged.plg headphones_unplugged.plg.old
 	echo "Updating plugin"
 	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/headphones_unplugged.plg
@@ -334,7 +356,7 @@ case "$1" in
 		headphones_enable $2 $3 $4 $5 $6 $7 $8
 	;;
 	'disable')
-		headphones_disable
+		headphones_disable $2 $3 $4 $5 $6 $7 $8
 	;;
 	'install')
 		headphones_install
@@ -353,6 +375,9 @@ case "$1" in
 	;;
 	'downgradeplg')
 		headphones_downgradeplg
+	;;
+	'buttonstart')
+		headphones_buttonstart
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
@@ -395,7 +420,7 @@ Title="Headphones"
 <?PHP
 $headphones_cfg = parse_ini_file( "/boot/config/plugins/headphones/headphones.cfg");
 $headphones_installed = file_exists( $headphones_cfg["INSTALLDIR"] . "/Headphones.py" ) ? "yes" : "no";
-$headphones_rollback = file_exists( "boot/config/plugins/headphones_unplugged.plg.old" ) ? "yes" : "no";
+$headphones_rollback = file_exists( "/boot/config/plugins/headphones_unplugged.plg.old" ) ? "yes" : "no";
 if ($headphones_installed=="yes")
 {
 	if ($headphones_cfg[PLG_STORAGESIZE]=="yes")
@@ -428,23 +453,27 @@ if ($headphones_installed=="yes")
 		</span>
 	</div>	
 	<?if ($headphones_installed=="yes"):?>
-		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
-			<form name="headphones_start_stop" method="POST" action="/update.htm" target="progressFrame">
-				<?if ($headphones_running=="yes"):?>
+		<?if ($headphones_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="headphones_start_stop" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones stop">
 					<input type="submit" name="runCmd" value="Stop">
-				<?else:?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones start">
-					<input type="submit" name="runCmd" value="Start">
-				<?endif;?>
-			</form>
-		</div>
-		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
-			<form name="headphones_restart" method="POST" action="/update.htm" target="progressFrame">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="headphones_restart" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones restart">
 					<input type="submit" name="runCmd" value="Restart">
-			</form>
-		</div>
+				</form>
+			</div>			
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="headphones_buttonstart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.headphones buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
 	<?else:?>
 		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 			<form name="headphones_install" method="POST" action="/update.htm" target="progressFrame">

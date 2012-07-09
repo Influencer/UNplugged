@@ -77,7 +77,7 @@ rm /tmp/sabnzbd-cleanup
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.0
+2.1
 ]]>
 </INLINE>
 </FILE>
@@ -115,7 +115,7 @@ sabnzbd_start()
 {
 	# no-op if not enabled
 	if [ $SERVICE != "enable" ]; then
-		return
+		sed -i "s/"disable"/"enable/"" $CONFIG
 	fi
   
 	# no-op if already running
@@ -199,6 +199,17 @@ sabnzbd_restart()
 	sabnzbd_start
 }
 
+sabnzbd_buttonstart()
+{
+echo "Enabling Sabnzbd"
+	CONFIG="/boot/config/plugins/sabnzbd/sabnzbd.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting sabnzbd"
+	sabnzbd_start
+	fi
+}
 sabnzbd_update()
 {
 	sabnzbd_stop
@@ -250,15 +261,18 @@ sabnzbd_change_settings()
 
 sabnzbd_enable()
 {
-	# if not already enabled, enable it
-	if [ "$SERVICE" != "enable" ]; then
-		SERVICE=enable
+	SERVICE=enable
+	if [$PORT != $2 ]; then
+		sabnzbd_change_settings $1 $2 $3 $4 $5 $6
+		write_config
+		sabnzbd_restart
+	else
 		sabnzbd_change_settings $1 $2 $3 $4 $5 $6
 		write_config
 	fi
-
-	# enabling also starts it
+	if [ ! -f /var/run/sabnzbd/sabnzbd.pid ]; then
 	sabnzbd_start
+	fi
 }
 
 sabnzbd_disable()
@@ -351,6 +365,7 @@ sabnzbd_datacheck()
 sabnzbd_updateplg()
 {
 	cd /boot/config/plugins
+	[ -f sabnzbd_unplugged.plg.old ] && rm -f sabnzbd_unplugged.plg.old
 	if [ -f sabnzbd_unplugged.plg ]; then
 	mv sabnzbd_unplugged.plg sabnzbd_unplugged.plg.old
 	echo "Updating plugin"
@@ -414,6 +429,9 @@ case "$1" in
 	;;
 	'downgradeplg')
 		sabnzbd_downgradeplg
+	;;
+	'buttonstart')
+		sabnzbd_buttonstart
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -502,23 +520,27 @@ else {
 		</span>
 	</div>	
 	<?if ($sabnzbd_installed=="yes"):?>
-		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
-			<form name="sabnzbd_start_stop" method="POST" action="/update.htm" target="progressFrame">
-				<?if ($sabnzbd_running=="yes"):?>
+		<?if ($sabnzbd_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="sabnzbd_start_stop" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd stop">
 					<input type="submit" name="runCmd" value="Stop">
-				<?else:?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd start">
-					<input type="submit" name="runCmd" value="Start">
-				<?endif;?>
-			</form>
-		</div>
-		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
-			<form name="sabnzbd_restart" method="POST" action="/update.htm" target="progressFrame">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="sabnzbd_restart" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd restart">
 					<input type="submit" name="runCmd" value="Restart">
-			</form>
-		</div>
+				</form>
+			</div>
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;margin-bottom:24px">
+				<form name="sabnzbd_start" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
 	<?else:?>
 		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 			<form name="sabnzbd_install" method="POST" action="/update.htm" target="progressFrame">
