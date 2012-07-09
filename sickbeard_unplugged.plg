@@ -57,6 +57,7 @@ I have...
 <![CDATA[
 [ -d /usr/local/emhttp/plugins/sickbeard ] && rm -f -R /usr/local/emhttp/plugins/sickbeard
 [ -f /etc/rc.d/rc.sickbeard ] && rm -f /etc/rc.d/rc.sickbeard
+[ -f /boot/config/plugins/sickbeard/plgver.txt ] && rm -f /boot/config/plugins/sickbeard/plgver.txt
 rm /tmp/sickbeard-cleanup
 ]]>
 </INLINE>

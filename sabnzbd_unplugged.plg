@@ -69,6 +69,7 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <![CDATA[
 [ -d /usr/local/emhttp/plugins/sabnzbd ] && rm -f -R /usr/local/emhttp/plugins/sabnzbd
 [ -f /etc/rc.d/rc.sabnzbd ] && rm -f /etc/rc.d/rc.sabnzbd
+[ -f /boot/config/plugins/sabnzbd/plgver.txt ] && rm -f /boot/config/plugins/sabnzbd/plgver.txt
 rm /tmp/sabnzbd-cleanup
 ]]>
 </INLINE>

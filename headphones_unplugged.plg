@@ -53,7 +53,7 @@ I have...
 <![CDATA[
 rm -f /etc/rc.d/rc.headphones
 rm -f -R /usr/local/emhttp/plugins/headphones
-rm -f /boot/config/plugins/headphones/plgver.txt
+[ -f /boot/config/plugins/headphones/plgver.txt ] && rm -f /boot/config/plugins/headphones/plgver.txt
 rm /tmp/headphones-cleanup
 ]]>
 </INLINE>
