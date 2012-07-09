@@ -507,7 +507,7 @@ else {
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/sabnzbd/device_status.png' class='icon'>Status:
+		<span class="left">Status:&#32;<img src='/plugins/sabnzbd/device_status.png'>
 			<?if ($sabnzbd_installed=="yes"):?>	
 				<?if ($sabnzbd_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$sab_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>
@@ -593,7 +593,7 @@ else {
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/sabnzbd/new_config.png' class='icon'>Configuration:</span>
+		<span class="left">Configuration:&#32;<img src='/plugins/sabnzbd/new_config.png'></span>
 	</div>
 	<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd">

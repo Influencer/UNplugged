@@ -447,7 +447,7 @@ if ($sickbeard_installed=="yes")
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/sickbeard/device_status.png' class='icon'>Status:
+		<span class="left">Status:&#32;<img src='/plugins/sickbeard/device_status.png'>
 			<?if ($sickbeard_installed=="yes"):?>	
 				<?if ($sickbeard_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$sickbeard_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sickbeard_curversion?></b></span>
@@ -534,7 +534,7 @@ if ($sickbeard_installed=="yes")
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/sickbeard/new_config.png' class='icon'>Configuration:</span>
+		<span class="left">Configuration:&#32;<img src='/plugins/sickbeard/new_config.png'></span>
 	</div>
 	<form name="sickbeard_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard">
