@@ -220,18 +220,10 @@ headphones_enable()
 {
 	# if not already enabled, enable it
 		SERVICE=enable
-		if [ $PORT != $2 ];then
+		headphones_stop
 		headphones_change_settings $1 $2 $3 $4 $5 $6 $7 $8
 		write_config
-        headphones_restart
-		else
-		headphones_change_settings $1 $2 $3 $4 $5 $6 $7 $8
-		write_config
-		fi
-	# enabling also starts it
-	if [ ! -f /var/run/headphones/headphones.pid ]; then
-	headphones_start
-	fi
+        headphones_start
 }
 
 headphones_disable()
@@ -432,7 +424,7 @@ if ($headphones_installed=="yes")
 	if (file_exists($headphones_cfg["INSTALLDIR"] . "/version.txt"))
 		$headphones_curversion = trim(shell_exec( "cat $headphones_cfg[INSTALLDIR]/version.txt" ));
 	else
-		$headphones_curversion = "couldn't determine the Headphones version, please run Update at the bottom of the Headphones web page first"; 
+		$headphones_curversion = "Update at the bottom of the Headphones web page first"; 
 	$headphones_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/rembo10/headphones/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
 	$headphones_installdirsize = trim(shell_exec( "if [ -e $headphones_cfg[INSTALLDIR] ]; then du -sh $headphones_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
 	$headphones_datadirsize = trim(shell_exec( "if [ -e $headphones_cfg[DATADIR] ]; then du -sh $headphones_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
@@ -535,7 +527,7 @@ if ($headphones_installed=="yes")
 			<tr>
 				<td>Enable HeadPhones:</td>
 				<td>
-					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
+					<select name="arg1" size="1">
 						<?=mk_option($headphones_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($headphones_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -595,31 +587,6 @@ if ($headphones_installed=="yes")
 	<br />
 </div>
 <script type="text/javascript">
-function checkINSTALLDIR(form)
-{
-   if ("<?=$headphones_running;?>" == "yes")
-   {
-		form.arg2.readOnly = true;
-		form.arg3.readOnly = true;
-		form.arg4.readOnly = true;
-		form.arg5.readOnly = true;
-		form.runas.disabled = true;
-		form.use_data.disabled = true;
-		form.storagesize.disabled = true;
-		form.datacheck.disabled = true;
-   }
-   else
-   {
-		form.arg2.readOnly = (form.arg1.value == "enable");
-		form.arg3.readOnly = (form.arg1.value == "enable");
-		form.arg4.readOnly = (form.arg1.value == "enable");
-		form.arg5.readOnly = (form.arg1.value == "enable");
-		form.runas.disabled = (form.arg1.value == "enable");
-		form.use_data.disabled = (form.arg1.value == "enable");
-		form.storagesize.disabled = (form.arg1.value == "enable");
-		form.datacheck.disabled = (form.arg1.value == "enable");		
-	}
-}
 
 function checkUSER(form)
 {

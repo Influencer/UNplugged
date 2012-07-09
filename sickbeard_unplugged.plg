@@ -167,6 +167,8 @@ echo "Enabling Sickbeard"
 		echo "Starting Sickbeard"
 	sickbeard_start
 	fi
+}
+
 sickbeard_update()
 {
 	sickbeard_stop
@@ -223,24 +225,16 @@ sickbeard_change_settings()
 sickbeard_enable()
 {
 	SERVICE=enable
-	if [$PORT != $2 ]; then	
-  		sickbeard_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+  		sickbeard_change_settings $1 $2 $3 $4 $5 $6 $7 $8 $9
 		write_config
 		sickbeard_restart
-	else
-		sickbeard_change_settings $1 $2 $3 $4 $5 $6 $7 $8
-		write_config
-	fi
-	if [ ! -f /var/run/sickbeard/sickbeard.pid ]; then
-	sickbeard_start
-	fi
 }
 
 sickbeard_disable()
 {
 	sickbeard_stop
 	SERVICE=disable
-	sickbeard_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+	sickbeard_change_settings $1 $2 $3 $4 $5 $6 $7 $8 $9
 	write_config
 }
 
@@ -474,7 +468,7 @@ if ($sickbeard_installed=="yes")
 				</form>
 			</div>			
 		<?else:?>
-			<div style="position:relative;float:left;width:100%;margin-bottom:24px">
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 				<form name="sickbeard_start" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sickbeard buttonstart">
 					<input type="submit" name="runCmd" value="Start">
@@ -542,7 +536,7 @@ if ($sickbeard_installed=="yes")
 			<tr>
 				<td>Enable SickBeard:</td>
 				<td>
-					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
+					<select name="arg1" size="1">
 						<?=mk_option($sickbeard_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($sickbeard_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -635,44 +629,6 @@ if ($sickbeard_installed=="yes")
 </div>
 
 <script type="text/javascript">
-function checkRUNNING(form)
-{
-	if ("<?=$sickbeard_running;?>" == "yes")
-	{
-		form.arg2.readOnly = true;
-		form.arg3.readOnly = true;
-		form.arg4.readOnly = true;
-		form.arg5.readOnly = true;
-		form.arg6.readOnly = true;
-		form.arg7.readOnly = true;
-		form.arg8.readOnly = true;
-		form.arg9.readOnly = true;
-		form.runas.disabled = true;
-		form.use_data.disabled = true;
-		form.storagesize.disabled = true;
-		form.datacheck.disabled = true;
-		form.url.disabled = true;
-		form.branch.disabled = true;
-   } 
-   else
-   {
-		form.arg2.readOnly = (form.arg1.value == "enable");
-		form.arg3.readOnly = (form.arg1.value == "enable");
-		form.arg4.readOnly = (form.arg1.value == "enable");
-		form.arg5.readOnly = (form.arg1.value == "enable");
-		form.arg6.readOnly = (form.arg1.value == "enable");
-		form.arg7.readOnly = (form.arg1.value == "enable");
-		form.arg8.readOnly = (form.arg1.value == "enable");
-		form.arg9.readOnly = (form.arg1.value == "enable");
-		form.runas.disabled = (form.arg1.value == "enable");
-		form.use_data.disabled = (form.arg1.value == "enable");
-		form.storagesize.disabled = (form.arg1.value == "enable");
-		form.datacheck.disabled = (form.arg1.value == "enable");
-		form.url.disabled = (form.arg1.value == "enable");
-		form.branch.disabled = (form.arg1.value == "enable");
-   }
-}
-
 function checkUSER(form)
 {
 	if (form.runas.selectedIndex < 2 )
@@ -738,8 +694,6 @@ function checkBRANCH(form)
 		form.arg9.type = "text";
 	}
 }
-
-checkRUNNING(document.sickbeard_settings);
 checkUSER(document.sickbeard_settings);
 checkDATADIR(document.sickbeard_settings);
 checkSTORAGE(document.sickbeard_settings);

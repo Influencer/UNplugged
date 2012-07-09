@@ -195,7 +195,7 @@ sabnzbd_stop()
 sabnzbd_restart()
 {
 	sabnzbd_stop
-	sleep 1
+	sleep 3
 	sabnzbd_start
 }
 
@@ -262,17 +262,10 @@ sabnzbd_change_settings()
 sabnzbd_enable()
 {
 	SERVICE=enable
-	if [$PORT != $2 ]; then
+	    sabnzbd_stop
 		sabnzbd_change_settings $1 $2 $3 $4 $5 $6
 		write_config
-		sabnzbd_restart
-	else
-		sabnzbd_change_settings $1 $2 $3 $4 $5 $6
-		write_config
-	fi
-	if [ ! -f /var/run/sabnzbd/sabnzbd.pid ]; then
-	sabnzbd_start
-	fi
+		sabnzbd_start
 }
 
 sabnzbd_disable()
@@ -601,7 +594,7 @@ else {
 			<tr>
 				<td>Enable SABnzbd:</td>
 				<td>
-					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
+					<select name="arg1" size="1">
 						<?=mk_option($sabnzbd_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($sabnzbd_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -614,6 +607,7 @@ else {
 			<tr>
 				<td>Data directory:</td>
 				<td><input type="checkbox" name="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
+			</tr>
 			<tr>
 				<td>Port:</td>
 				<td><input type="text" name="arg3" maxlength="40" value="<?=$sab_port;?>"></td>
@@ -661,36 +655,6 @@ else {
 </div>
 
 <script type="text/javascript">
-function checkRUNNING(form)
-{
-	if ("<?=$sabnzbd_running;?>" == "yes")
-	{
-		form.arg2.readOnly = true;
-		form.arg3.readOnly = true;
-		form.arg4.readOnly = true;
-		form.arg5.readOnly = true;
-		form.arg6.readOnly = true;
-		form.arg7.readOnly = true;
-		form.runas.disabled = true;
-		form.use_data.disabled = true;
-		form.storagesize.disabled = true;
-		form.datacheck.disabled = true;
-	}
-   else
-   {
-		form.arg2.readOnly = (form.arg1.value == "enable");
-		form.arg3.readOnly = (form.arg1.value == "enable");
-		form.arg4.readOnly = (form.arg1.value == "enable");
-		form.arg5.readOnly = (form.arg1.value == "enable");
-		form.arg6.readOnly = (form.arg1.value == "enable");
-		form.arg7.readOnly = (form.arg1.value == "enable");
-		form.runas.disabled = (form.arg1.value == "enable");
-		form.use_data.disabled = (form.arg1.value == "enable");
-		form.storagesize.disabled = (form.arg1.value == "enable");
-		form.datacheck.disabled = (form.arg1.value == "enable");
-   }
-}
-
 function checkUSER(form)
 {
 	if (form.runas.selectedIndex < 2 )
@@ -729,7 +693,6 @@ function checkDATA(form)
 	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
 }
 
-checkRUNNING(document.sabnzbd_settings);
 checkUSER(document.sabnzbd_settings);
 checkDATADIR(document.sabnzbd_settings);
 checkSTORAGE(document.sabnzbd_settings);
