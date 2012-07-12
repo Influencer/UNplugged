@@ -69,6 +69,7 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <![CDATA[
 [ -d /usr/local/emhttp/plugins/sabnzbd ] && rm -f -R /usr/local/emhttp/plugins/sabnzbd
 [ -f /etc/rc.d/rc.sabnzbd ] && rm -f /etc/rc.d/rc.sabnzbd
+[ -f /boot/config/plugins/sabnzbd/plgver.txt ] && rm -f /boot/config/plugins/sabnzbd/plgver.txt
 rm /tmp/sabnzbd-cleanup
 ]]>
 </INLINE>
@@ -77,7 +78,7 @@ rm /tmp/sabnzbd-cleanup
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.0
+2.1
 ]]>
 </INLINE>
 </FILE>
@@ -115,7 +116,7 @@ sabnzbd_start()
 {
 	# no-op if not enabled
 	if [ $SERVICE != "enable" ]; then
-		return
+		sed -i "s/"disable"/"enable/"" $CONFIG
 	fi
   
 	# no-op if already running
@@ -195,10 +196,21 @@ sabnzbd_stop()
 sabnzbd_restart()
 {
 	sabnzbd_stop
-	sleep 1
+	sleep 3
 	sabnzbd_start
 }
 
+sabnzbd_buttonstart()
+{
+echo "Enabling Sabnzbd"
+	CONFIG="/boot/config/plugins/sabnzbd/sabnzbd.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting sabnzbd"
+	sabnzbd_start
+	fi
+}
 sabnzbd_update()
 {
 	sabnzbd_stop
@@ -250,15 +262,11 @@ sabnzbd_change_settings()
 
 sabnzbd_enable()
 {
-	# if not already enabled, enable it
-	if [ "$SERVICE" != "enable" ]; then
-		SERVICE=enable
+	SERVICE=enable
+	    sabnzbd_stop
 		sabnzbd_change_settings $1 $2 $3 $4 $5 $6
 		write_config
-	fi
-
-	# enabling also starts it
-	sabnzbd_start
+		sabnzbd_start
 }
 
 sabnzbd_disable()
@@ -351,6 +359,7 @@ sabnzbd_datacheck()
 sabnzbd_updateplg()
 {
 	cd /boot/config/plugins
+	[ -f sabnzbd_unplugged.plg.old ] && rm -f sabnzbd_unplugged.plg.old
 	if [ -f sabnzbd_unplugged.plg ]; then
 	mv sabnzbd_unplugged.plg sabnzbd_unplugged.plg.old
 	echo "Updating plugin"
@@ -414,6 +423,9 @@ case "$1" in
 	;;
 	'downgradeplg')
 		sabnzbd_downgradeplg
+	;;
+	'buttonstart')
+		sabnzbd_buttonstart
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -489,7 +501,7 @@ else {
 
 <div style="width: 49%; float:left">
 	<div id="title">
-		<span class="left"><img src='/plugins/sabnzbd/device_status.png' class='icon'>Status:
+		<span class="left">Status:&#32;<img src='/plugins/sabnzbd/device_status.png'>
 			<?if ($sabnzbd_installed=="yes"):?>	
 				<?if ($sabnzbd_running=="yes"):?>
 					<a href="http://<?=$var['NAME'];?>:<?=$sab_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>
@@ -502,23 +514,27 @@ else {
 		</span>
 	</div>	
 	<?if ($sabnzbd_installed=="yes"):?>
-		<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
-			<form name="sabnzbd_start_stop" method="POST" action="/update.htm" target="progressFrame">
-				<?if ($sabnzbd_running=="yes"):?>
+		<?if ($sabnzbd_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="sabnzbd_start_stop" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd stop">
 					<input type="submit" name="runCmd" value="Stop">
-				<?else:?>
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd start">
-					<input type="submit" name="runCmd" value="Start">
-				<?endif;?>
-			</form>
-		</div>
-		<div style="position:relative;float:left;width:50%;margin-bottom:24px">
-			<form name="sabnzbd_restart" method="POST" action="/update.htm" target="progressFrame">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="sabnzbd_restart" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd restart">
 					<input type="submit" name="runCmd" value="Restart">
-			</form>
-		</div>
+				</form>
+			</div>
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;margin-bottom:24px">
+				<form name="sabnzbd_start" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
 	<?else:?>
 		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 			<form name="sabnzbd_install" method="POST" action="/update.htm" target="progressFrame">
@@ -571,7 +587,7 @@ else {
 </div>
 <div style="width: 49%; float:right">
 	<div id="title">
-		<span class="left"><img src='/plugins/sabnzbd/new_config.png' class='icon'>Configuration:</span>
+		<span class="left">Configuration:&#32;<img src='/plugins/sabnzbd/new_config.png'></span>
 	</div>
 	<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd">
@@ -579,7 +595,7 @@ else {
 			<tr>
 				<td>Enable SABnzbd:</td>
 				<td>
-					<select name="arg1" size="1" onChange="checkRUNNING(this.form);">
+					<select name="arg1" size="1">
 						<?=mk_option($sabnzbd_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($sabnzbd_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -592,6 +608,7 @@ else {
 			<tr>
 				<td>Data directory:</td>
 				<td><input type="checkbox" name="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
+			</tr>
 			<tr>
 				<td>Port:</td>
 				<td><input type="text" name="arg3" maxlength="40" value="<?=$sab_port;?>"></td>
@@ -639,36 +656,6 @@ else {
 </div>
 
 <script type="text/javascript">
-function checkRUNNING(form)
-{
-	if ("<?=$sabnzbd_running;?>" == "yes")
-	{
-		form.arg2.readOnly = true;
-		form.arg3.readOnly = true;
-		form.arg4.readOnly = true;
-		form.arg5.readOnly = true;
-		form.arg6.readOnly = true;
-		form.arg7.readOnly = true;
-		form.runas.disabled = true;
-		form.use_data.disabled = true;
-		form.storagesize.disabled = true;
-		form.datacheck.disabled = true;
-	}
-   else
-   {
-		form.arg2.readOnly = (form.arg1.value == "enable");
-		form.arg3.readOnly = (form.arg1.value == "enable");
-		form.arg4.readOnly = (form.arg1.value == "enable");
-		form.arg5.readOnly = (form.arg1.value == "enable");
-		form.arg6.readOnly = (form.arg1.value == "enable");
-		form.arg7.readOnly = (form.arg1.value == "enable");
-		form.runas.disabled = (form.arg1.value == "enable");
-		form.use_data.disabled = (form.arg1.value == "enable");
-		form.storagesize.disabled = (form.arg1.value == "enable");
-		form.datacheck.disabled = (form.arg1.value == "enable");
-   }
-}
-
 function checkUSER(form)
 {
 	if (form.runas.selectedIndex < 2 )
@@ -707,7 +694,6 @@ function checkDATA(form)
 	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
 }
 
-checkRUNNING(document.sabnzbd_settings);
 checkUSER(document.sabnzbd_settings);
 checkDATADIR(document.sabnzbd_settings);
 checkSTORAGE(document.sabnzbd_settings);
