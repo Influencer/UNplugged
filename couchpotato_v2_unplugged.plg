@@ -61,7 +61,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.1
+2.2
 ]]>
 </INLINE>
 </FILE>

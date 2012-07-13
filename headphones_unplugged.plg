@@ -62,7 +62,7 @@ rm /tmp/headphones-cleanup
 <FILE Name="/boot/config/plugins/headphones/plgver.txt">
 <INLINE>
 <![CDATA[
-1.6
+1.7
 ]]>
 </INLINE>
 </FILE>
