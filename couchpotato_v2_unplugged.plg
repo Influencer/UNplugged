@@ -61,7 +61,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.1
+2.2
 ]]>
 </INLINE>
 </FILE>
@@ -78,6 +78,30 @@ PLG_STORAGESIZE="yes"
 PLG_DATACHECK="yes"
 INSTALLURL="https://github.com/RuudBurger/CouchPotatoServer"
 BRANCH="master"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/checkconfig" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+test=`cat /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg | grep BRANCH`
+if [[ $test = "" ]]; then
+	echo "" >> /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
+	echo "INSTALLURL=\"https://github.com/RuudBurger/CouchPotatoServer\"" >> /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
+	echo "BRANCH=\"master\"" >> /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
+fi
+
+plgstorage=`cat /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg | grep PLG_STORAGESIZE`
+if [[ $plgstorage = "" ]]; then
+   echo "PLG_STORAGESIZE=\"yes\"" >> /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
+fi
+plgdata=`cat /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg | grep PLG_DATACHECK`
+if [[ $plgdata = "" ]]; then
+	echo "PLG_DATACHECK=\"yes\"" >> /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
+fi
+rm /tmp/checkconfig
 ]]>
 </INLINE>
 </FILE>

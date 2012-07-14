@@ -66,7 +66,7 @@ rm /tmp/sickbeard-cleanup
 <FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
 <INLINE>
 <![CDATA[
-2.1
+2.2
 ]]>
 </INLINE>
 </FILE>
@@ -83,6 +83,30 @@ PLG_STORAGESIZE="yes"
 PLG_DATACHECK="yes"
 INSTALLURL="https://github.com/midgetspy/Sick-Beard"
 BRANCH="master"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/checkconfig" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+test=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep BRANCH`
+if [[ $test = "" ]]; then
+	echo "" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+	echo "INSTALLURL=\"https://github.com/midgetspy/Sick-Beard\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+	echo "BRANCH=\"master\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+fi
+
+plgstorage=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep PLG_STORAGESIZE`
+if [[ $plgstorage = "" ]]; then
+   echo "PLG_STORAGESIZE=\"yes\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+fi
+plgdata=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep PLG_DATACHECK`
+if [[ $plgdata = "" ]]; then
+	echo "PLG_DATACHECK=\"yes\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+fi
+rm /tmp/checkconfig
 ]]>
 </INLINE>
 </FILE>
