@@ -83,6 +83,7 @@ PLG_STORAGESIZE="yes"
 PLG_DATACHECK="yes"
 INSTALLURL="https://github.com/midgetspy/Sick-Beard"
 BRANCH="master"
+PORT="8081"
 ]]>
 </INLINE>
 </FILE>
