@@ -53,6 +53,7 @@ I have...
 [ -d /usr/local/emhttp/plugins/couchpotato_v2 ] && rm -f -R /usr/local/emhttp/plugins/couchpotato_v2
 [ -f /etc/rc.d/rc.couchpotato_v2 ] && rm -f /etc/rc.d/rc.couchpotato_v2
 [ -f /boot/config/plugins/couchpotato_v2/plgver.txt ] && rm -f /boot/config/plugins/couchpotato_v2/plgver.txt
+git config --global http.sslVerify false
 rm /tmp/couchpotato_v2-cleanup
 ]]>
 </INLINE>
