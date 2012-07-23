@@ -385,9 +385,9 @@ sabnzbd_downgradeplg()
 # read our configuration
 source /boot/config/plugins/sabnzbd/sabnzbd.cfg
 if [ -e $DATADIR/sabnzbd.ini ]; then
-	PORT=`cat "$DATADIR/sabnzbd.ini" | grep '^port' | awk 'NR==1' | cut -d' ' -f3`
+	PORT=`cat "$DATADIR/sabnzbd.ini" | grep '^port' | awk 'NR==1' | cut -d' ' -f3 | tr -d '\r'`
 else
-	PORT=`cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3`
+	PORT=`cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3 | tr -d '\r'`
 fi
 
 case "$1" in
