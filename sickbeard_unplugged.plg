@@ -736,7 +736,10 @@ checkBRANCH(document.sickbeard_settings);
 <INLINE>
 <![CDATA[
 #!/bin/bash
+source /boot/config/plugins/sickbeard/sickbeard.cfg
+if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.sickbeard start
+fi
 ]]>
 </INLINE>
 </FILE>
