@@ -784,7 +784,9 @@ checkBRANCH(document.couchpotato_settings);
 <INLINE>
 <![CDATA[
 #!/bin/bash
+if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.couchpotato_v2 start
+fi
 ]]>
 </INLINE>
 </FILE>

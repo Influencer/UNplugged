@@ -640,7 +640,9 @@ checkDATA(document.headphones_settings);
 <INLINE>
 <![CDATA[
 #!/bin/bash
+if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.headphones start
+fi
 ]]>
 </INLINE>
 </FILE>
