@@ -1,0 +1,792 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This Plugin installs and controls HTPC Manager for unRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits:
+Benni-Chan: Much of the plug-in structure from his original plug-ins. Much of that code is still in place.
+
+WW: Config page formatting, ability to select alternate branches.
+-->
+
+<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
+<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+</FILE>
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
+</FILE>
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/htpcmanager/htpcmanager.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/htpcmanager.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/htpcmanager-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+[ -d /usr/local/emhttp/plugins/htpcmanager ] && rm -f -R /usr/local/emhttp/plugins/htpcmanager
+[ -f /etc/rc.d/rc.htpcmanager ] && rm -f /etc/rc.d/rc.htpcmanager
+[ -f /boot/config/plugins/htpcmanager/plgver.txt ] && rm -f /boot/config/plugins/htpcmanager/plgver.txt
+rm /tmp/htpcmanager-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/htpcmanager/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/htpcmanager/htpcmanager.cfg">
+<INLINE>
+<![CDATA[
+# HTPC Manager configuration:
+SERVICE="disable"
+INSTALLDIR="/usr/local/htpcmanager"
+CONFIGFILE="/boot/config/plugins/htpcmanager/config.cfg"
+RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+INSTALLURL="https://github.com/mbw2001/HTPC-Manager.git"
+BRANCH="master"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/htpcmanager/config.cfg">
+<INLINE>
+<![CDATA[
+[htpc]
+my_port = 8084
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.htpcmanager" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# start|stop|restart|enable|disable|install|update|storagesize|datacheck htpcmanager
+
+htpcmanager_start()
+{ 
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+	fi
+  
+	# no-op if already running
+	if [ -r /var/run/htpcmanager/htpcmanager.pid ]; then
+		return
+	fi
+  
+	# if directory doesn't exist or HTPC manager is not found, install it
+	if [[ "$INSTALLDIR" != "" && ! -e "$INSTALLDIR/htpc.py" ]]; then
+		htpcmanager_install
+	fi
+  
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/htpc.py --daemon --config_file $CONFIGFILE --pid_file /var/run/htpcmanager/htpcmanager.pid"
+	echo "Starting HTPC Manager: $CMDLINE"
+	sleep 1
+	$CMDLINE
+
+	while [ ! -e /var/run/htpcmanager/htpcmanager.pid ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+htpcmanager_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/htpcmanager/htpcmanager.pid ]; then
+		return
+	fi
+
+	echo "Stopping HTPC Manager..."
+	sleep 1
+	kill $(cat /var/run/htpcmanager/htpcmanager.pid)
+	sleep 3
+	
+	if [ -e /var/run/htpcmanager/htpcmanager.pid ]; then
+		kill -9 $(cat /var/run/htpcmanager/htpcmanager.pid )
+		rm /var/run/htpcmanager/htpcmanager.pid
+	fi
+	echo "... OK"
+	sleep 1
+}
+
+htpcmanager_restart()
+{
+	htpcmanager_stop
+	sleep 1
+	htpcmanager_start
+}
+htpcmanager_buttonstart()
+{
+echo "Enabling htpcmanager"
+	CONFIG="/boot/config/plugins/htpcmanager/htpcmanager.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting htpcmanager"
+	htpcmanager_start
+	fi
+}
+
+htpcmanager_update()
+{
+	htpcmanager_stop
+	sleep 1
+	htpcmanager_install
+	sleep 1
+	htpcmanager_start
+}
+
+write_config()
+{
+	echo "#HTPC Manager configuration:" > /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+    echo "CONFIGFILE=\"$CONFIGFILE\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "INSTALLURL=\"$INSTALLURL\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "BRANCH=\"$BRANCH\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	if [ -e "$CONFIGFILE" ]; then
+		sed -i 's!data_dir = '"`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`"'!data_dir = '"$DATADIR"'!' "$CONFIGFILE"
+		sed -i 's!port = '"`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'`"'!port = '"$PORT"'!' "$CONFIGFILE"
+	fi
+}
+
+htpcmanager_change_settings()
+{
+	PORT="$2"
+	INSTALLDIR="$3"
+	DATADIR="$4"
+	
+	if [ $DATADIR == "" ]; then
+		$DATADIR="$INSTALLDIR"
+	fi
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$INSTALLDIR" "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$5"
+	PLG_DATACHECK="$6"
+	INSTALLURL="$7"
+	BRANCH="$8"
+	
+	# create HTPC Manager user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+
+htpcmanager_enable()
+{
+	# if not already enabled, enable it
+		SERVICE=enable
+		if [ $PORT != $2 ];then
+		htpcmanager_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+        htpcmanager_restart
+		else
+		htpcmanager_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+		fi
+	# enabling also starts it
+	if [ ! -f /var/run/htpcmanager/htpcmanager.pid ]; then
+	htpcmanager_start
+	fi
+}
+
+htpcmanager_disable()
+{
+	htpcmanager_stop
+	SERVICE=disable
+	htpcmanager_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+	write_config
+}
+
+htpcmanager_install()
+{
+	echo "Installing latest version of HTPC Manager..."
+	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p $INSTALLDIR
+	fi
+	
+	DATADIR="`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`"
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p $DATADIR
+	fi
+	
+	if [ -e ""$DATADIR"/cache/version" ]; then 
+		rm ""$DATADIR"/cache/version"
+	fi	
+	
+	cd /tmp
+	git clone -b $BRANCH $INSTALLURL HTPC-Manager
+	cp -Rf /tmp/HTPC-Manager/* $INSTALLDIR
+	rm -Rf /tmp/HTPC-Manager
+		
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+	sleep 3
+	echo "... OK"
+	sleep 1
+}
+
+htpcmanager_storagesize() 
+{
+	if [ $1 ] && [ $2 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+	
+		if [ -d $2 ]; then
+			DAT=`du -sh $2 | cut -f1`
+		elif [ -f $2 ]; then
+			DAT=`ls -lah $2 | awk '{ print $5}'`
+		fi
+		
+		if [ $1 == $2 ]; then
+			echo "<p style="margin-left:10px\;">Storage memory usage: install + data directory: <b>$INST</b></p>"
+		else
+			echo "<p style="margin-left:10px\;">Storage memory usage: install directory: <b>$INST</b>, data directory: <b>$DAT</b></p>"
+		fi
+	elif [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
+htpcmanager_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your data directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your data directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;margin-right:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+htpcmanager_updateplg()
+{
+	cd /boot/config/plugins
+	[ -f htpcmanager_unplugged.plg.old ] && rm -f htpcmanager_unplugged.plg.old
+	if [ -f htpcmanager_unplugged.plg ]; then
+	mv htpcmanager_unplugged.plg htpcmanager_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/htpcmanager_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/htpcmanager_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/htpcmanager_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/htpcmanager_unplugged.plg
+	fi
+}
+htpcmanager_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f htpcmanager_unplugged.plg.old ]; then
+	rm -f /htpcmanager_unplugged.plg
+	mv htpcmanager_unplugged.plg.old htpcmanager_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/htpcmanager_unplugged.plg
+	fi
+}
+
+# read our configuration
+source /boot/config/plugins/htpcmanager/htpcmanager.cfg
+if [ -e "$CONFIGFILE" ]; then
+	DATADIR=`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`
+	PORT=`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'`
+fi
+
+case "$1" in
+	'start')
+		htpcmanager_start
+	;;
+	'stop')
+		htpcmanager_stop
+	;;
+	'restart')
+		htpcmanager_restart
+	;;
+	'enable')
+		htpcmanager_enable $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'disable')
+		htpcmanager_disable $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'install')
+		htpcmanager_install
+	;;
+	'update')
+		htpcmanager_update
+	;;
+	'storagesize')
+		htpcmanager_storagesize $2 $3
+	;;
+	'datacheck')
+		htpcmanager_datacheck
+	;;
+	'updateplg')
+		htpcmanager_updateplg
+	;;
+	'downgradeplg')
+		htpcmanager_downgradeplg
+	;;
+	'buttonstart')
+		htpcmanager_buttonstart
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/htpcmanager.page">
+<INLINE>
+<![CDATA[
+Menu="NetworkServices"
+Icon="htpcmanager.png"
+Version="0.7"
+Author="Influencer"
+Type="php"
+Title="HTPC Manager"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/htpcmanager.png">
+<LOCAL>/boot/config/plugins/htpcmanager/htpcmanager.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/htpcmanager.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$htpcmanager_cfg = parse_ini_file( "/boot/config/plugins/htpcmanager/htpcmanager.cfg");
+$htpcmanager_installed = file_exists( $htpcmanager_cfg["INSTALLDIR"] . "/Htpc.py" ) ? "yes" : "no";
+$htpcmanager_rollback = file_exists( "/boot/config/plugins/htpcmanager_unplugged.plg.old" ) ? "yes" : "no";
+$htpcmanager_configfile = $htpcmanager_cfg["CONFIGFILE"];
+$htpcmanager_datadir = trim(shell_exec( "cat \"$htpcmanager_configfile\" | grep 'data_dir' | cut -d' ' -f3" ));
+if ($htpcmanager_installed=="yes")
+{	
+	$htpcmanager_running = file_exists( "/var/run/htpcmanager/htpcmanager.pid") ? "yes" : "no";
+	if ($htpcmanager_cfg[PLG_STORAGESIZE]=="yes")
+		$htpcmanager_datasize = shell_exec ( "/etc/rc.d/rc.htpcmanager storagesize $htpcmanager_cfg[INSTALLDIR] $htpcmanager_datadir" );
+	if ($htpcmanager_cfg[PLG_DATACHECK]=="yes")
+		$htpcmanager_datacheck = shell_exec ( "/etc/rc.d/rc.htpcmanager datacheck" );
+	$htpcmanager_plgver = shell_exec ( "cat /boot/config/plugins/htpcmanager/plgver.txt" );
+
+	if (file_exists("$htpcmanager_datadir" . "/cache/version"))
+		$htpcmanager_curversion = trim(shell_exec( "cat \"$htpcmanager_datadir\"/cache/version | cut -d '\"' -f6- | sed 's/\(.*\)../\\1/'" ));
+	else
+		$htpcmanager_curversion = "couldn't determine the HTPC Manager version";
+	$htpcmanager_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $htpcmanager_cfg[INSTALLURL]/commits/$htpcmanager_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));
+}
+// get HTPC Manager port
+if (file_exists($htpcmanager_configfile))
+	$htpc_port = trim(shell_exec( "cat \"$htpcmanager_configfile\" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'" ));
+?>
+
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/htpcmanager/device_status.png'>
+			<?if ($htpcmanager_installed=="yes"):?>	
+				<?if ($htpcmanager_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$htpc_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$htpcmanager_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+		<?if ($htpcmanager_installed=="yes"):?>
+			<?if ($htpcmanager_running=="yes"):?>	
+				<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+					<form name="htpcmanager_stop" method="POST" action="/update.htm" target="progressFrame">
+						<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager stop">
+						<input type="submit" name="runCmd" value="Stop">
+					</form>
+				</div>
+				<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+					<form name="htpcmanager_restart" method="POST" action="/update.htm" target="progressFrame">
+						<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager restart">
+						<input type="submit" name="runCmd" value="Restart">
+					</form>
+				</div>
+			<?else:?>
+				<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+					<form name="htpcmanager_buttonstart" method="POST" action="/update.htm" target="progressFrame">
+						<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager buttonstart">
+						<input type="submit" name="runCmd" value="Start">
+					</form>
+				</div>
+			<?endif;?>
+		<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="htpcmanager_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+		<?endif;?>
+	<? if ($htpcmanager_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="htpcmanager_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="htpcmanager_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="htpcmanager_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($htpcmanager_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">Installed from <?=$htpcmanager_cfg[BRANCH]?> branch of <?=$htpcmanager_cfg[INSTALLURL]?> site</p>
+		<? if ($htpcmanager_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$htpcmanager_datasize?>
+		<? endif; ?>
+		<? if ($htpcmanager_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$htpcmanager_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$htpcmanager_plgver;?></b></p>
+		<? if (strcmp($htpcmanager_curversion, $htpcmanager_newversion)!=0 && $htpcmanager_curversion!="couldn't determine the HTPC Manager version"): ?>
+			<center>
+				<form name="htpcmanager_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$htpcmanager_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/htpcmanager/new_config.png'></span>
+	</div>
+	<form name="htpcmanager_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.htpcmanager">
+		<table class="settings">
+			<tr>
+				<td>Enable HTPC Manager:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($htpcmanager_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($htpcmanager_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$htpcmanager_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($htpcmanager_datadir!=$htpcmanager_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$htpcmanager_datadir;?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$htpc_port;?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($htpcmanager_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($htpcmanager_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($htpcmanager_cfg['RUNAS'] != "root" && $htpcmanager_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$htpcmanager_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($htpcmanager_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($htpcmanager_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$htpcmanager_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($htpcmanager_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($htpcmanager_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$htpcmanager_cfg['PLG_DATACHECK'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
+			<? if ($htpcmanager_installed=="no"): ?>
+				<input type="button" value="Show advanced configuration" style="margin-bottom:35px" onClick="if (this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display != '') { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = ''; this.innerText = ''; this.value = 'Hide advanced configuration'; } else { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = 'none'; this.innerText = ''; this.value = 'Show advanced configuration'; }">
+			<? endif; ?>
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+		<div>
+			<div style="display: none;">
+				<br />
+				<table class="settings">
+					<tr>
+						<td style="width:auto">Install from:</td>
+						<td>
+							<select name="url" size="1" onChange="checkURL(this.form);">
+								<?=mk_option($htpcmanager_cfg['INSTALLURL'], "https://github.com/mbw2001/HTPC-Manager", "official github");?>
+								<option value='other'<?=($htpcmanager_cfg['INSTALLURL'] != "https://github.com/mbw2001/HTPC-Manager")?" selected=yes":"" ;?>>other github</option>
+							</select>
+							<input type="hidden" name="arg8" maxlength="100" style="text-align:left;width:63%" value="<?=$htpcmanager_cfg['INSTALLURL'];?>">
+							<img src="/plugins/htpcmanager/information.png" title="Installing from other than official github site is not recommended. Use this option at your own risk!"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="width:auto">Specify branch:</td>
+						<td>
+							<select name="branch" size="1" onChange="checkBRANCH(this.form);">
+								<?=mk_option($htpcmanager_cfg['BRANCH'], "master", "master");?>
+								<option value='other'<?=($htpcmanager_cfg['BRANCH'] != "master")?" selected=yes":"" ;?>>other</option>
+							</select>
+							<input type="hidden" name="arg9" maxlength="40" style="text-align:left;width:71%" value="<?=$htpcmanager_cfg['BRANCH'];?>">
+							<img src="/plugins/htpcmanager/information.png" title="Installing other branch than master is not recommended. Use this option at your own risk!"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</form>
+	<br />
+</div>
+
+<script type="text/javascript">
+function checkRUNNING(form)
+{
+	if ("<?=$htpcmanager_running;?>" == "yes")
+	{
+		form.arg2.readOnly = true;
+		form.arg3.readOnly = true;
+		form.arg4.readOnly = true;
+		form.arg5.readOnly = true;
+		form.arg6.readOnly = true;
+		form.arg7.readOnly = true;
+		form.arg8.readOnly = true;
+		form.arg9.readOnly = true;
+		form.runas.disabled = true;
+		form.use_data.disabled = true;
+		form.storagesize.disabled = true;
+		form.datacheck.disabled = true;
+		form.url.disabled = true;
+		form.branch.disabled = true;
+   } 
+   else
+   {
+		form.arg2.readOnly = (form.arg1.value == "enable");
+		form.arg3.readOnly = (form.arg1.value == "enable");
+		form.arg4.readOnly = (form.arg1.value == "enable");
+		form.arg5.readOnly = (form.arg1.value == "enable");
+		form.arg6.readOnly = (form.arg1.value == "enable");
+		form.arg7.readOnly = (form.arg1.value == "enable");
+		form.arg8.readOnly = (form.arg1.value == "enable");
+		form.arg9.readOnly = (form.arg1.value == "enable");
+		form.runas.disabled = (form.arg1.value == "enable");
+		form.use_data.disabled = (form.arg1.value == "enable");
+		form.storagesize.disabled = (form.arg1.value == "enable");
+		form.datacheck.disabled = (form.arg1.value == "enable");
+		form.url.disabled = (form.arg1.value == "enable");
+		form.branch.disabled = (form.arg1.value == "enable");
+   }
+}
+ 
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$htpcmanager_datadir;?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+
+function checkURL(form)
+{
+	if (form.url.selectedIndex < 1 )
+	{
+		form.arg8.value = form.url.options[form.url.selectedIndex].value;
+		form.arg8.type = "hidden";
+	}
+	else
+	{
+		form.arg8.value = "<?=$htpcmanager_cfg['INSTALLURL'];?>";
+		form.arg8.type = "text";
+	}
+}
+
+function checkBRANCH(form)
+{
+	if (form.branch.selectedIndex < 1 )
+	{
+		form.arg9.value = form.branch.options[form.branch.selectedIndex].value;
+		form.arg9.type = "hidden";
+	}
+	else
+	{
+		form.arg9.value = "<?=$htpcmanager_cfg['BRANCH'];?>";
+		form.arg9.type = "text";
+	}
+}
+
+checkUSER(document.htpcmanager_settings);
+checkDATADIR(document.htpcmanager_settings);
+checkSTORAGE(document.htpcmanager_settings);
+checkDATA(document.htpcmanager_settings);
+checkURL(document.htpcmanager_settings);
+checkBRANCH(document.htpcmanager_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.htpcmanager start
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/htpcmanager/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.htpcmanager stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/htpcmanager-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/htpcmanager/htpcmanager.cfg
+
+# create htpcmanager-writable directory for pid file
+if [ ! -e /var/run/htpcmanager ]; then
+  mkdir /var/run/htpcmanager
+  chown $RUNAS:users /var/run/htpcmanager
+  chmod 0777 /var/run/htpcmanager
+fi
+
+if [ -e $INSTALLDIR ]; then
+chmod -R 0777 $INSTALLDIR
+fi
+rm /tmp/htpcmanager-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/htpcmanager">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
