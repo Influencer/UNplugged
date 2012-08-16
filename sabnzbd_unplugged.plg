@@ -719,9 +719,7 @@ checkDATA(document.sabnzbd_settings);
 <INLINE>
 <![CDATA[
 #!/bin/bash
-if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.sabnzbd stop
-fi
 ]]>
 </INLINE>
 </FILE>
