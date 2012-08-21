@@ -138,7 +138,7 @@ sickbeard_start()
     CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
 	echo "Starting SickBeard: $CMDLINE"
 	sleep 1
-	$CMDLINE
+	nohup $CMDLINE > /dev/null 2>&1 &
   
 	TIMER=0
 	while [ ! -e /var/run/sickbeard/sickbeard.pid ]; do
@@ -152,8 +152,6 @@ sickbeard_start()
 
 	done
 	echo "... OK"
-	sleep 1
-	echo "Please refresh the page"
 }
 
 sickbeard_stop()
