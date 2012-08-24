@@ -36,9 +36,6 @@ Right click and save link as;
 
 ###Special Thanks:
 
-* wjd85 for donation
-* Sweigh for donation
-* mdm144 for donation
-* p1lot for donation
-* gbdesai for donation
-* mrow for donation
+To ALL that have donated. It is very appreciated! I removed individual names as the list would be getting very long,
+and I haven't had time to keep this list up to date! There have been quite a few people who have donated, and I
+honestly never would have thought so many would! Again, thanks to all of you for your generosity and support!
