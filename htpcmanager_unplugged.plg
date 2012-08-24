@@ -51,7 +51,7 @@ rm /tmp/htpcmanager-cleanup
 <FILE Name="/boot/config/plugins/htpcmanager/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0
+0.5
 ]]>
 </INLINE>
 </FILE>
@@ -62,11 +62,10 @@ rm /tmp/htpcmanager-cleanup
 # HTPC Manager configuration:
 SERVICE="disable"
 INSTALLDIR="/usr/local/htpcmanager"
-CONFIGFILE="/boot/config/plugins/htpcmanager/config.cfg"
 RUNAS="nobody"
 PLG_STORAGESIZE="yes"
 PLG_DATACHECK="yes"
-INSTALLURL="https://github.com/mbw2001/HTPC-Manager.git"
+INSTALLURL="https://github.com/mbw2001/HTPC-Manager"
 BRANCH="master"
 ]]>
 </INLINE>
@@ -100,14 +99,15 @@ htpcmanager_start()
 	fi
   
 	# if directory doesn't exist or HTPC manager is not found, install it
-	if [[ "$INSTALLDIR" != "" && ! -e "$INSTALLDIR/htpc.py" ]]; then
+	if [[ "$INSTALLDIR" != "" && ! -e "$INSTALLDIR/Htpc.py" ]]; then
 		htpcmanager_install
 	fi
   
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/htpc.py --daemon --config_file $CONFIGFILE --pid_file /var/run/htpcmanager/htpcmanager.pid"
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Htpc.py --datadir $DATADIR --port $PORT --pid /var/run/htpcmanager/htpcmanager.pid"
 	echo "Starting HTPC Manager: $CMDLINE"
 	sleep 1
-	$CMDLINE
+	cd /usr/local/htpcmanager
+	nohup $CMDLINE > /dev/null 2>&1 &
 
 	while [ ! -e /var/run/htpcmanager/htpcmanager.pid ]; do
 		sleep 1
@@ -168,16 +168,13 @@ write_config()
 	echo "#HTPC Manager configuration:" > /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
-    echo "CONFIGFILE=\"$CONFIGFILE\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "INSTALLURL=\"$INSTALLURL\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 	echo "BRANCH=\"$BRANCH\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
-	if [ -e "$CONFIGFILE" ]; then
-		sed -i 's!data_dir = '"`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`"'!data_dir = '"$DATADIR"'!' "$CONFIGFILE"
-		sed -i 's!port = '"`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'`"'!port = '"$PORT"'!' "$CONFIGFILE"
-	fi
+	echo "PORT=\"$PORT\"" >> /boot/config/plugins/htpcmanager/htpcmanager.cfg
 }
 
 htpcmanager_change_settings()
@@ -244,19 +241,14 @@ htpcmanager_install()
 		mkdir -p $INSTALLDIR
 	fi
 	
-	DATADIR="`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`"
 	if [ ! -e "$DATADIR" ]; then 
 		mkdir -p $DATADIR
 	fi
 	
-	if [ -e ""$DATADIR"/cache/version" ]; then 
-		rm ""$DATADIR"/cache/version"
-	fi	
-	
-	cd /tmp
-	git clone -b $BRANCH $INSTALLURL HTPC-Manager
-	cp -Rf /tmp/HTPC-Manager/* $INSTALLDIR
-	rm -Rf /tmp/HTPC-Manager
+	cd $INSTALLDIR
+	git clone -b $BRANCH $INSTALLURL $INSTALLDIR
+#	cp -Rf /tmp/HTPC-Manager/* $INSTALLDIR
+#	rm -Rf /tmp/HTPC-Manager
 		
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3
@@ -338,13 +330,27 @@ htpcmanager_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/htpcmanager_unplugged.plg
 	fi
 }
+htpcmanager_vercheck()
+{
+	set -x
+	cd /usr/local/htpcmanager
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
+htpcmanager_newver()
+{
+	set -x
+	source /boot/config/plugins/htpcmanager/htpcmanager.cfg
+	cd /tmp/
+	wget -q -O feed.atom --no-check-certificate $INSTALLURL/commits/$BRANCH.atom 
+	newver=`cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/'`
+	rm feed.atom
+	echo "$newver"
+}
+	
 
 # read our configuration
 source /boot/config/plugins/htpcmanager/htpcmanager.cfg
-if [ -e "$CONFIGFILE" ]; then
-	DATADIR=`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`
-	PORT=`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'`
-fi
 
 case "$1" in
 	'start')
@@ -382,6 +388,12 @@ case "$1" in
 	;;
 	'buttonstart')
 		htpcmanager_buttonstart
+	;;
+	'vercheck')
+		htpcmanager_vercheck
+	;;
+	'newvercheck')
+		htpcmanager_newver
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -426,26 +438,21 @@ Title="HTPC Manager"
 $htpcmanager_cfg = parse_ini_file( "/boot/config/plugins/htpcmanager/htpcmanager.cfg");
 $htpcmanager_installed = file_exists( $htpcmanager_cfg["INSTALLDIR"] . "/Htpc.py" ) ? "yes" : "no";
 $htpcmanager_rollback = file_exists( "/boot/config/plugins/htpcmanager_unplugged.plg.old" ) ? "yes" : "no";
-$htpcmanager_configfile = $htpcmanager_cfg["CONFIGFILE"];
-$htpcmanager_datadir = trim(shell_exec( "cat \"$htpcmanager_configfile\" | grep 'data_dir' | cut -d' ' -f3" ));
 if ($htpcmanager_installed=="yes")
 {	
 	$htpcmanager_running = file_exists( "/var/run/htpcmanager/htpcmanager.pid") ? "yes" : "no";
 	if ($htpcmanager_cfg[PLG_STORAGESIZE]=="yes")
-		$htpcmanager_datasize = shell_exec ( "/etc/rc.d/rc.htpcmanager storagesize $htpcmanager_cfg[INSTALLDIR] $htpcmanager_datadir" );
+		$htpcmanager_datasize = shell_exec ( "/etc/rc.d/rc.htpcmanager storagesize $htpcmanager_cfg[INSTALLDIR] $htpcmanager_cfg[DATADIR]" );
 	if ($htpcmanager_cfg[PLG_DATACHECK]=="yes")
 		$htpcmanager_datacheck = shell_exec ( "/etc/rc.d/rc.htpcmanager datacheck" );
 	$htpcmanager_plgver = shell_exec ( "cat /boot/config/plugins/htpcmanager/plgver.txt" );
 
-	if (file_exists("$htpcmanager_datadir" . "/cache/version"))
-		$htpcmanager_curversion = trim(shell_exec( "cat \"$htpcmanager_datadir\"/cache/version | cut -d '\"' -f6- | sed 's/\(.*\)../\\1/'" ));
+	if (file_exists("$htpcmanager_cfg[INSTALLDIR]" . "/Htpc.py"))
+		$htpcmanager_curversion = shell_exec( "/etc/rc.d/rc.htpcmanager vercheck" );
 	else
 		$htpcmanager_curversion = "couldn't determine the HTPC Manager version";
-	$htpcmanager_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $htpcmanager_cfg[INSTALLURL]/commits/$htpcmanager_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));
+	$htpcmanager_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $htpcmanager_cfg[INSTALLURL]/commits/$htpcmanager_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );
 }
-// get HTPC Manager port
-if (file_exists($htpcmanager_configfile))
-	$htpc_port = trim(shell_exec( "cat \"$htpcmanager_configfile\" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'" ));
 ?>
 
 <div style="width: 49%; float:left">
@@ -453,7 +460,7 @@ if (file_exists($htpcmanager_configfile))
 		<span class="left">Status:&#32;<img src='/plugins/htpcmanager/device_status.png'>
 			<?if ($htpcmanager_installed=="yes"):?>	
 				<?if ($htpcmanager_running=="yes"):?>
-					<a href="http://<?=$var['NAME'];?>:<?=$htpc_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$htpcmanager_curversion?></b></span>
+					<a href="http://<?=$var['NAME'];?>:<?=$htpcmanager_cfg["PORT"];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$htpcmanager_curversion?></b></span>
 				<?else:?>
 					<span class="red"><b>STOPPED</b></span>
 				<?endif;?>
@@ -557,11 +564,11 @@ if (file_exists($htpcmanager_configfile))
 			</tr>
 			<tr>
 				<td>Data directory:</td>
-				<td><input type="checkbox" name="use_data" <?=($htpcmanager_datadir!=$htpcmanager_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$htpcmanager_datadir;?>"></td>
+				<td><input type="checkbox" name="use_data" <?=($htpcmanager_cfg["DATADIR"]!=$htpcmanager_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$htpcmanager_cfg["DATADIR"];?>"></td>
 			</tr>
 			<tr>
 				<td>Port:</td>
-				<td><input type="text" name="arg3" maxlength="40" value="<?=$htpc_port;?>"></td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$htpcmanager_cfg["PORT"];?>"></td>
 			</tr>
 			<tr>
 				<td>Run as user:</td>
