@@ -330,6 +330,12 @@ headphones_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/headphones_unplugged.plg
 	fi
 }
+headphones_vercheck()
+{
+	cd $INSTALLDIR
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
 
 # read our configuration
 source /boot/config/plugins/headphones/headphones.cfg
@@ -370,6 +376,9 @@ case "$1" in
 	;;
 	'buttonstart')
 		headphones_buttonstart
+	;;
+	'vercheck')
+		headphones_vercheck
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
@@ -421,8 +430,8 @@ if ($headphones_installed=="yes")
 		$headphones_datacheck = shell_exec ( "/etc/rc.d/rc.headphones datacheck" );
 	$headphones_plgver = shell_exec ( "cat /boot/config/plugins/headphones/plgver.txt" );
 	$headphones_running = file_exists( "/var/run/headphones/headphones-".$headphones_cfg['PORT'].".pid") ? "yes" : "no";
-	if (file_exists($headphones_cfg["INSTALLDIR"] . "/version.txt"))
-		$headphones_curversion = trim(shell_exec( "cat $headphones_cfg[INSTALLDIR]/version.txt" ));
+	if (file_exists($headphones_cfg["INSTALLDIR"] . "/Headphones.py"))
+		$headphones_curversion = trim(shell_exec( "/etc/rc.d/rc.headphones vercheck" );
 	else
 		$headphones_curversion = "Update at the bottom of the Headphones web page first"; 
 	$headphones_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/rembo10/headphones/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		

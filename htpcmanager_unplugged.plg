@@ -247,8 +247,6 @@ htpcmanager_install()
 	
 	cd $INSTALLDIR
 	git clone -b $BRANCH $INSTALLURL $INSTALLDIR
-#	cp -Rf /tmp/HTPC-Manager/* $INSTALLDIR
-#	rm -Rf /tmp/HTPC-Manager
 		
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3

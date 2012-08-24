@@ -292,10 +292,8 @@ couchpotato_install()
 		rm ""$DATADIR"/cache/version"
 	fi	
 	
-	cd /tmp
-	git clone -b $BRANCH $INSTALLURL CouchPotatoServer
-	cp -Rf /tmp/CouchPotatoServer/* $INSTALLDIR
-	rm -Rf /tmp/CouchPotatoServer
+	cd $INSTALLDIR
+	git clone -b $BRANCH $INSTALLURL $INSTALLDIR
 		
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3
@@ -377,6 +375,12 @@ couchpotato_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
 	fi
 }
+couchpotato_vercheck()
+{
+	cd $INSTALLDIR
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
 
 # read our configuration
 source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
@@ -421,6 +425,9 @@ case "$1" in
 	;;
 	'buttonstart')
 		couchpotato_buttonstart
+	;;
+	'vercheck')
+		couchpotato_vercheck
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -476,11 +483,11 @@ if ($couchpotato_installed=="yes")
 		$couchpotato_datacheck = shell_exec ( "/etc/rc.d/rc.couchpotato_v2 datacheck" );
 	$couchpotato_plgver = shell_exec ( "cat /boot/config/plugins/couchpotato_v2/plgver.txt" );
 
-	if (file_exists("$couchpotato_datadir" . "/cache/version"))
-		$couchpotato_curversion = trim(shell_exec( "cat \"$couchpotato_datadir\"/cache/version | cut -d '\"' -f6- | sed 's/\(.*\)../\\1/'" ));
+	if (file_exists("$couchpotato_datadir" . "/CouchPotato.py"))
+		$couchpotato_curversion = shell_exec( "/etc/rc.d/rc.couchpotato_v2 vercheck" );
 	else
 		$couchpotato_curversion = "couldn't determine the CouchPotato v2 version";
-	$couchpotato_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $couchpotato_cfg[INSTALLURL]/commits/$couchpotato_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));
+	$couchpotato_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $couchpotato_cfg[INSTALLURL]/commits/$couchpotato_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));
 }
 // get CouchPotato v2 port
 if (file_exists($couchpotato_configfile))

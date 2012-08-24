@@ -363,6 +363,12 @@ sickbeard_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/sickbeard_unplugged.plg
 	fi
 }
+sickbeard_vercheck()
+{
+	cd $INSTALLDIR
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
 
 # read our configuration
 source /boot/config/plugins/sickbeard/sickbeard.cfg
@@ -403,6 +409,9 @@ case "$1" in
 	;;
 	'buttonstart')
 		sickbeard_buttonstart
+	;;
+	'vercheck')
+		sickbeard_vercheck
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -455,8 +464,8 @@ if ($sickbeard_installed=="yes")
 	if ($sickbeard_cfg[PLG_DATACHECK]=="yes")
 		$sickbeard_datacheck = shell_exec ( "/etc/rc.d/rc.sickbeard datacheck" );
 	$sickbeard_plgver = shell_exec ( "cat /boot/config/plugins/sickbeard/plgver.txt" );
-	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/version.txt"))
-		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[INSTALLDIR]/version.txt" ));
+	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/SickBeard.py"))
+		$sickbeard_curversion = trim(shell_exec( "/etc/rc.d/rc.sickbeard vercheck" );
 	else
 		$sickbeard_curversion = "couldn't determine the SickBeard version"; 
 	$sickbeard_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
