@@ -35,6 +35,9 @@ WW: Config page formatting, ability to select alternate branches.
 <FILE Name="/boot/config/plugins/images/information.png">
 <URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
 </FILE>
+<FILE Name="/boot/packages/argparse-0.9.1.tgz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/argparse0.9.1.tgz</URL>
+</FILE>
 
 <!-- clean up previous install -->
 <FILE Name="/tmp/htpcmanager-cleanup" Run="/bin/bash">
