@@ -66,7 +66,7 @@ rm /tmp/sickbeard-cleanup
 <FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
 <INLINE>
 <![CDATA[
-2.2
+2.5
 ]]>
 </INLINE>
 </FILE>
@@ -279,9 +279,7 @@ sickbeard_install()
 	fi
 	
 	cd /tmp
-	git clone -b $BRANCH $INSTALLURL Sick-Beard
-	cp -Rf /tmp/Sick-Beard/* $INSTALLDIR
-	rm -Rf /tmp/Sick-Beard
+	git clone -b $BRANCH $INSTALLURL $INSTALLDIR
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3
