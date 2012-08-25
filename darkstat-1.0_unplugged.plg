@@ -9,9 +9,8 @@ Darkstat is a network monitoring tool similar to iftop and bwm-ng. Darkstat incl
 lists hosts and how much bandwidth is being used.
 -->
 
-<FILE Name="/boot/packages/darkstat-3.0.712-i486.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/darkstat-3.0.712-i486.txz</URL>
-<MD5>c1a6fb6ce44e808504ac3588ebd1e9ef</MD5>
+<FILE Name="/boot/packages/darkstat-3.0.715-i686-1cf.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate http://www.slackers.it/repository/darkstat/pkg/darkstat-3.0.715-i686-1cf.txz</URL>
 </FILE>
 
 <FILE Name="/boot/packages/libpcap-1.1.1-i486-1.txz" Run="upgradepkg --install-new">
