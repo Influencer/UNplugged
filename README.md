@@ -21,6 +21,9 @@ Although unRAID is considered by some to be a "enthusiast" OS, and that many use
 
 I hope you enjoy my releases, and as always, if there are any suggestions, feel free to let me know.
 
+[Support Forum](http://lime-technology.com/forum/index.php?topic=21260.0)
+[Wiki](https://github.com/Influencer/UNplugged/wiki)
+
 If you like my work, feel free to donate. I will NEVER require a donation or payment.
 
 [DONATE](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2679NHED2LCHG)
@@ -32,7 +35,8 @@ Right click and save link as;
 -  [Sabnzbd_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sabnzbd_unplugged.plg)
 -  [Sickbeard_unplugged.plg](https://github.com/influencer/unplugged/raw/master/sickbeard_unplugged.plg)
 -  [Headphones_unplugged.plg](https://github.com/influencer/unplugged/raw/master/headphones_unplugged.plg)
--  [Darkstat-1.9_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_unplugged.plg)
+-  [Htpcmanager_unplugged.plg](https://github.com/influencer/unplugged/raw/master/htpcmanager_unplugged.plg)
+-  [Darkstat-1.0_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_unplugged.plg)
 
 ###Special Thanks:
 
