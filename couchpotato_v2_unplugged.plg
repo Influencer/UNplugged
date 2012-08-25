@@ -483,11 +483,11 @@ if ($couchpotato_installed=="yes")
 		$couchpotato_datacheck = shell_exec ( "/etc/rc.d/rc.couchpotato_v2 datacheck" );
 	$couchpotato_plgver = shell_exec ( "cat /boot/config/plugins/couchpotato_v2/plgver.txt" );
 
-	if (file_exists("$couchpotato_datadir" . "/CouchPotato.py"))
+	if (file_exists("$couchpotato_cfg[INSTALLDIR]" . "/CouchPotato.py"))
 		$couchpotato_curversion = shell_exec( "/etc/rc.d/rc.couchpotato_v2 vercheck" );
 	else
 		$couchpotato_curversion = "couldn't determine the CouchPotato v2 version";
-	$couchpotato_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $couchpotato_cfg[INSTALLURL]/commits/$couchpotato_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));
+	$couchpotato_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $couchpotato_cfg[INSTALLURL]/commits/$couchpotato_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );
 }
 // get CouchPotato v2 port
 if (file_exists($couchpotato_configfile))
