@@ -465,10 +465,10 @@ if ($sickbeard_installed=="yes")
 		$sickbeard_datacheck = shell_exec ( "/etc/rc.d/rc.sickbeard datacheck" );
 	$sickbeard_plgver = shell_exec ( "cat /boot/config/plugins/sickbeard/plgver.txt" );
 	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/SickBeard.py"))
-		$sickbeard_curversion = trim(shell_exec( "/etc/rc.d/rc.sickbeard vercheck" );
+		$sickbeard_curversion = shell_exec( "/etc/rc.d/rc.sickbeard vercheck" );
 	else
 		$sickbeard_curversion = "couldn't determine the SickBeard version"; 
-	$sickbeard_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
+	$sickbeard_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
 }
 ?>
 
