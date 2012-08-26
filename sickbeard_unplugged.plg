@@ -66,7 +66,7 @@ rm /tmp/sickbeard-cleanup
 <FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
 <INLINE>
 <![CDATA[
-2.5
+2.2
 ]]>
 </INLINE>
 </FILE>
@@ -279,7 +279,9 @@ sickbeard_install()
 	fi
 	
 	cd /tmp
-	git clone -b $BRANCH $INSTALLURL $INSTALLDIR
+	git clone -b $BRANCH $INSTALLURL Sick-Beard
+	cp -Rf /tmp/Sick-Beard/* $INSTALLDIR
+	rm -Rf /tmp/Sick-Beard
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3
@@ -361,12 +363,6 @@ sickbeard_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/sickbeard_unplugged.plg
 	fi
 }
-sickbeard_vercheck()
-{
-	cd $INSTALLDIR
-	curversion=$( git rev-parse HEAD )
-	echo "$curversion"
-}
 
 # read our configuration
 source /boot/config/plugins/sickbeard/sickbeard.cfg
@@ -407,9 +403,6 @@ case "$1" in
 	;;
 	'buttonstart')
 		sickbeard_buttonstart
-	;;
-	'vercheck')
-		sickbeard_vercheck
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -462,11 +455,11 @@ if ($sickbeard_installed=="yes")
 	if ($sickbeard_cfg[PLG_DATACHECK]=="yes")
 		$sickbeard_datacheck = shell_exec ( "/etc/rc.d/rc.sickbeard datacheck" );
 	$sickbeard_plgver = shell_exec ( "cat /boot/config/plugins/sickbeard/plgver.txt" );
-	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/SickBeard.py"))
-		$sickbeard_curversion = shell_exec( "/etc/rc.d/rc.sickbeard vercheck" );
+	if (file_exists($sickbeard_cfg["INSTALLDIR"] . "/version.txt"))
+		$sickbeard_curversion = trim(shell_exec( "cat $sickbeard_cfg[INSTALLDIR]/version.txt" ));
 	else
 		$sickbeard_curversion = "couldn't determine the SickBeard version"; 
-	$sickbeard_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
+	$sickbeard_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $sickbeard_cfg[INSTALLURL]/commits/$sickbeard_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
 }
 ?>
 
