@@ -250,9 +250,7 @@ headphones_install()
 	fi
 	
 	cd /tmp
-	git clone https://github.com/rembo10/headphones/
-	cp -Rf /tmp/headphones/* $INSTALLDIR
-	rm -Rf /tmp/headphones
+	git clone -b master https://github.com/rembo10/headphones/ $INSTALLDIR
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 }
 
@@ -431,10 +429,10 @@ if ($headphones_installed=="yes")
 	$headphones_plgver = shell_exec ( "cat /boot/config/plugins/headphones/plgver.txt" );
 	$headphones_running = file_exists( "/var/run/headphones/headphones-".$headphones_cfg['PORT'].".pid") ? "yes" : "no";
 	if (file_exists($headphones_cfg["INSTALLDIR"] . "/Headphones.py"))
-		$headphones_curversion = trim(shell_exec( "/etc/rc.d/rc.headphones vercheck" );
+		$headphones_curversion = shell_exec( "/etc/rc.d/rc.headphones vercheck" );
 	else
 		$headphones_curversion = "Update at the bottom of the Headphones web page first"; 
-	$headphones_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/rembo10/headphones/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
+	$headphones_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/rembo10/headphones/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
 	$headphones_installdirsize = trim(shell_exec( "if [ -e $headphones_cfg[INSTALLDIR] ]; then du -sh $headphones_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
 	$headphones_datadirsize = trim(shell_exec( "if [ -e $headphones_cfg[DATADIR] ]; then du -sh $headphones_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
 }
