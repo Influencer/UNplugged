@@ -109,7 +109,7 @@ htpcmanager_start()
 	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Htpc.py --debug --datadir $DATADIR --port $PORT --pid /var/run/htpcmanager/htpcmanager.pid"
 	echo "Starting HTPC Manager: $CMDLINE"
 	sleep 1
-	cd /usr/local/htpcmanager
+	cd $INSTALLDIR
 	nohup $CMDLINE > /dev/null 2>&1 &
 
 	while [ ! -e /var/run/htpcmanager/htpcmanager.pid ]; do
