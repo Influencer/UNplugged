@@ -66,7 +66,7 @@ rm /tmp/sickbeard-cleanup
 <FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
 <INLINE>
 <![CDATA[
-2.2
+2.4
 ]]>
 </INLINE>
 </FILE>
@@ -105,7 +105,14 @@ if [[ $plgstorage = "" ]]; then
 fi
 plgdata=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep PLG_DATACHECK`
 if [[ $plgdata = "" ]]; then
-	echo "PLG_DATACHECK=\"yes\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+	break
+else
+	sed "/$plgdata^/d" /boot/config/plugins/sickbeard/sickbeard.cfg >tmp
+	mv tmp /boot/config/plugins/sickbeard/sickbeard.cfg
+fi
+plgforceupdate=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep FORCEUPDATE`
+if [[ $plgforceupdate = "" ]]; then
+	echo "FORCEUPDATE=\"yes\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 fi
 rm /tmp/checkconfig
 ]]>
@@ -134,11 +141,19 @@ sickbeard_start()
 	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/SickBeard.py" ]]; then
 		sickbeard_install
 	fi
-  
-    CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
-	echo "Starting SickBeard: $CMDLINE"
-	sleep 1
-	nohup $CMDLINE > /dev/null 2>&1 &
+	
+	#Check if force-update should be done on startup
+	if [ "$FORCEUPDATE" = "yes" ]; then
+		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --forceupdate --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
+		echo "Starting SickBeard: $CMDLINE"
+		sleep 1
+		nohup $CMDLINE > /dev/null 2>&1 &
+	else  
+		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
+		echo "Starting SickBeard: $CMDLINE"
+		sleep 1
+		nohup $CMDLINE > /dev/null 2>&1 &
+	fi
   
 	TIMER=0
 	while [ ! -e /var/run/sickbeard/sickbeard.pid ]; do
@@ -210,10 +225,10 @@ write_config()
 	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
-	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 	echo "INSTALLURL=\"$INSTALLURL\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 	echo "BRANCH=\"$BRANCH\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 	echo "PORT=\"$PORT\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+	echo "FORCEUPDATE=\"$FORCEUPDATE\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 }
 
 sickbeard_change_settings()
@@ -233,7 +248,7 @@ sickbeard_change_settings()
 	RUNAS="$1"
 	
 	PLG_STORAGESIZE="$5"
-	PLG_DATACHECK="$6"
+	FORCEUPDATE="$6"
 	INSTALLURL="$7"
 	BRANCH="$8"
 	
@@ -534,9 +549,7 @@ if ($sickbeard_installed=="yes")
 		<? if ($sickbeard_cfg[PLG_STORAGESIZE]=="yes"): ?>
 			<?=$sickbeard_datasize?>
 		<? endif; ?>
-		<? if ($sickbeard_cfg[PLG_DATACHECK]=="yes"): ?>
 			<?=$sickbeard_datacheck?>
-		<? endif; ?>
 		<p style="margin-left:10px;"><b>Plug-in Version: <?=$sickbeard_plgver;?></b></p>
 		<? if (strcmp($sickbeard_curversion, $sickbeard_newversion)!=0 && $sickbeard_curversion!="couldn't determine the SickBeard version"): ?>
 			<center>
@@ -589,6 +602,7 @@ if ($sickbeard_installed=="yes")
 					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$sickbeard_cfg['RUNAS'];?>">
 				</td>
 			</tr>
+
 			<tr><td>---</td></tr>
 			<tr>
 				<td>Show storage memory usage:</td>
@@ -600,14 +614,13 @@ if ($sickbeard_installed=="yes")
 					<input type="hidden" name="arg6" value="<?=$sickbeard_cfg['PLG_STORAGESIZE'];?>">
 				</td>
 			</tr>
-			<tr>
-				<td>Show data persistency information:</td>
+						<tr>
+				<td>Force Update on Start?</td>
 				<td>
-					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
-						<?=mk_option($sickbeard_cfg['PLG_DATACHECK'], "yes", "Yes");?>
-						<?=mk_option($sickbeard_cfg['PLG_DATACHECK'], "no", "No");?>
+					<select name="arg7" size="1">
+						<?=mk_option($sickbeard_cfg['FORCEUPDATE'], "yes", "Yes");?>
+						<?=mk_option($sickbeard_cfg['FORCEUPDATE'], "no", "No");?>
 					</select>
-					<input type="hidden" name="arg7" value="<?=$sickbeard_cfg['PLG_DATACHECK'];?>">
 				</td>
 			</tr>
 		</table>
