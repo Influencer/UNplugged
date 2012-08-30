@@ -128,8 +128,13 @@ sabnzbd_start()
 	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/SABnzbd.py" ]]; then
 		sabnzbd_install
 	fi
-  
+    
+	if [ ! -r $INSTALLDIR/sabnzbd/api.pyo ]; then
+	CMDLINE="sudo -u $RUNAS python -OO $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
+	else
 	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
+	fi
+	
 	echo "Starting SABnzbd: $CMDLINE"
 	sleep 1
 	$CMDLINE
