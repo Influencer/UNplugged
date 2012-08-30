@@ -647,6 +647,7 @@ checkDATA(document.headphones_settings);
 <INLINE>
 <![CDATA[
 #!/bin/bash
+source /boot/config/plugins/headphones/headphones.cfg
 if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.headphones start
 fi
