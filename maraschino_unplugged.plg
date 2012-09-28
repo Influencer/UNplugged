@@ -1,0 +1,771 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This is the dev branch!!!
+This Plugin installs and controls maraschino for UnRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits: 
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+place and changes have been made for new features and fixes.
+
+WW: Install & Data Directory size, some config page formatting, multi-branch selection
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
+-->
+
+<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
+<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+</FILE>
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
+</FILE>
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/maraschino/maraschino.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/maraschino.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/maraschino-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+[ -d /usr/local/emhttp/plugins/maraschino ] && rm -f -R /usr/local/emhttp/plugins/maraschino
+[ -f /etc/rc.d/rc.maraschino ] && rm -f /etc/rc.d/rc.maraschino
+[ -f /boot/config/plugins/maraschino/plgver.txt ] && rm -f /boot/config/plugins/maraschino/plgver.txt
+rm /tmp/maraschino-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/maraschino/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/maraschino/maraschino.cfg">
+<INLINE>
+<![CDATA[
+# maraschino configuration:
+SERVICE="disable"
+INSTALLDIR="/usr/local/maraschino"
+DATADIR="/usr/local/maraschino"
+RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+FORCEUPDATE="no"
+INSTALLURL="https://github.com/mrkipling/maraschino"
+BRANCH="master"
+PORT="8088"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/checkconfig" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+test=`cat /boot/config/plugins/maraschino/maraschino.cfg | grep BRANCH`
+if [[ $test = "" ]]; then
+	echo "" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "INSTALLURL=\"https://github.com/mrkipling/maraschino\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "BRANCH=\"master\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+fi
+
+plgstorage=`cat /boot/config/plugins/maraschino/maraschino.cfg | grep PLG_STORAGESIZE`
+if [[ $plgstorage = "" ]]; then
+   echo "PLG_STORAGESIZE=\"yes\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+fi
+plgdata=`cat /boot/config/plugins/maraschino/maraschino.cfg | grep PLG_DATACHECK`
+if [[ $plgdata = "" ]]; then
+	echo "PLG_DATACHECK=\"yes\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+fi
+rm /tmp/checkconfig
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.maraschino" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# start|stop|restart|enable|disable|install|update|storagesize|datacheck maraschino.
+
+maraschino_start()
+{ set -x
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG
+	fi
+  
+	# no-op if already running
+	if [ -r /var/run/maraschino/maraschino.pid ]; then
+		return
+	fi
+  
+	# if directory doesn't exist or maraschino is not found, install it
+	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/Maraschino.py" ]]; then
+		maraschino_install
+	fi
+	cd $INSTALLDIR
+		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Maraschino.py --port $PORT --datadir=$DATADIR --pidfile=/var/run/maraschino/maraschino.pid > /dev/null 2>&1"
+		echo "Starting maraschino: $CMDLINE"
+		sleep 1
+		nohup $CMDLINE > /dev/null 2>&1 &
+  
+	TIMER=0
+	while [ ! -e /var/run/maraschino/maraschino.pid ]; do
+		sleep 1
+		let TIMER=$TIMER+1
+	        echo -n $TIMER
+	        if [ $TIMER -gt 10 ]; then
+        	        echo -n "maraschino.pid not created for some reason"
+                	break
+        	fi
+
+	done
+	echo "... OK"
+}
+
+maraschino_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/maraschino/maraschino.pid ]; then
+		return
+	fi
+	
+	echo "Stopping maraschino..."
+	sleep 1
+	kill $(cat /var/run/maraschino/maraschino.pid)
+	sleep 3
+	
+	if [ -e /var/run/maraschino/maraschino.pid ]; then
+		kill -9 $(cat /var/run/maraschino/maraschino.pid )
+		rm /var/run/maraschino/maraschino.pid
+	fi
+	echo "... OK"
+	sleep 1
+}
+
+maraschino_restart()
+{
+	maraschino_stop
+	sleep 1
+	maraschino_start
+}
+
+maraschino_buttonstart()
+{
+echo "Enabling maraschino"
+	CONFIG="/boot/config/plugins/maraschino/maraschino.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG
+		sleep 3
+		echo "Starting maraschino"
+	maraschino_start
+	fi
+}
+
+maraschino_update()
+{
+	maraschino_stop
+	sleep 1
+	maraschino_install
+	sleep 1
+	maraschino_start
+}
+
+write_config()
+{
+	echo "# maraschino configuration:" > /boot/config/plugins/maraschino/maraschino.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "INSTALLURL=\"$INSTALLURL\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "BRANCH=\"$BRANCH\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "PORT=\"$PORT\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/maraschino/maraschino.cfg
+}
+
+maraschino_change_settings()
+{
+	PORT="$2"
+	INSTALLDIR="$3"
+	DATADIR="$4"
+	
+	if [ $DATADIR == "" ]; then
+		$DATADIR="$INSTALLDIR"
+	fi
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$INSTALLDIR" "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$5"
+	PLG_DATACHECK="$6"
+	INSTALLURL="$7"
+	BRANCH="$8"
+	
+	# create maraschino user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+
+maraschino_enable()
+{
+	SERVICE=enable
+  		maraschino_change_settings $1 $2 $3 $4 $5 $6 $7 $8 $9
+		write_config
+		maraschino_restart
+}
+
+maraschino_disable()
+{
+	maraschino_stop
+	SERVICE=disable
+	maraschino_change_settings $1 $2 $3 $4 $5 $6 $7 $8 $9
+	write_config
+}
+
+maraschino_install()
+{
+	echo "Installing latest version of maraschino..."
+	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p $INSTALLDIR
+    fi
+	
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p $DATADIR
+    fi
+	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+	
+	cd /tmp
+	git clone -b $BRANCH $INSTALLURL maraschino
+	cp -Rf /tmp/maraschino/* $INSTALLDIR
+	rm -Rf /tmp/maraschino
+	
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+	sleep 3
+	echo "... OK"
+	sleep 1
+}
+
+maraschino_storagesize() 
+{
+	if [ $1 ] && [ $2 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+	
+		if [ -d $2 ]; then
+			DAT=`du -sh $2 | cut -f1`
+		elif [ -f $2 ]; then
+			DAT=`ls -lah $2 | awk '{ print $5}'`
+		fi
+		
+		if [ $1 == $2 ]; then
+			echo "<p style="margin-left:10px\;">Storage memory usage: install + data directory: <b>$INST</b></p>"
+		else
+			echo "<p style="margin-left:10px\;">Storage memory usage: install directory: <b>$INST</b>, data directory: <b>$DAT</b></p>"
+		fi
+	elif [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
+maraschino_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your Data Directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your Data Directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;margin-right:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+maraschino_updateplg()
+{
+	cd /boot/config/plugins
+	[ -f maraschino_unplugged.plg.old ] && rm -f maraschino_unplugged.plg.old
+	if [ -f maraschino_unplugged.plg ]; then
+	mv maraschino_unplugged.plg maraschino_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/maraschino_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/maraschino_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/maraschino_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/maraschino_unplugged.plg
+	fi
+}
+maraschino_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f maraschino_unplugged.plg.old ]; then
+	rm -f /maraschino_unplugged.plg
+	mv maraschino_unplugged.plg.old maraschino_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/maraschino_unplugged.plg
+	fi
+}
+
+# read our configuration
+source /boot/config/plugins/maraschino/maraschino.cfg
+
+case "$1" in
+	'start')
+		maraschino_start
+	;;
+	'stop')
+		maraschino_stop
+	;;
+	'restart')
+		maraschino_restart
+	;;
+	'enable')
+		maraschino_enable $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'disable')
+		maraschino_disable $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'install')
+		maraschino_install
+	;;
+	'update')
+		maraschino_update
+	;;
+	'storagesize')
+		maraschino_storagesize $2 $3
+	;;
+	'datacheck')
+		maraschino_datacheck
+	;;
+	'updateplg')
+		maraschino_updateplg
+	;;
+	'downgradeplg')
+		maraschino_downgradeplg
+	;;
+	'buttonstart')
+		maraschino_buttonstart
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/maraschino/maraschino.page">
+<INLINE>
+<![CDATA[
+Menu="NetworkServices"
+Icon="maraschino.png"
+Version="1.0"
+Author="Benjamin Waller; Influencer"
+Type="php"
+Title="maraschino"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/maraschino/maraschino.png">
+<LOCAL>/boot/config/plugins/maraschino/maraschino.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/maraschino/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/maraschino/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/maraschino/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/maraschino/maraschino.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$maraschino_cfg = parse_ini_file( "/boot/config/plugins/maraschino/maraschino.cfg" );
+$maraschino_installed = file_exists( $maraschino_cfg["INSTALLDIR"] . "/Maraschino.py" ) ? "yes" : "no";
+$maraschino_rollback = file_exists( "boot/config/plugins/maraschino_unplugged.plg.old" ) ? "yes" : "no";
+if ($maraschino_installed=="yes")
+{
+	$maraschino_running = file_exists( "/var/run/maraschino/maraschino.pid") ? "yes" : "no";
+	if ($maraschino_cfg[PLG_STORAGESIZE]=="yes")
+		$maraschino_datasize = shell_exec ( "/etc/rc.d/rc.maraschino storagesize $maraschino_cfg[INSTALLDIR] $maraschino_cfg[DATADIR]" );
+	if ($maraschino_cfg[PLG_DATACHECK]=="yes")
+		$maraschino_datacheck = shell_exec ( "/etc/rc.d/rc.maraschino datacheck" );
+	$maraschino_plgver = shell_exec ( "cat /boot/config/plugins/maraschino/plgver.txt" );
+	if (file_exists($maraschino_cfg["INSTALLDIR"] . "/version.txt"))
+		$maraschino_curversion = trim(shell_exec( "cat $maraschino_cfg[INSTALLDIR]/version.txt" ));
+	else
+		$maraschino_curversion = "couldn't determine the maraschino version"; 
+	$maraschino_newversion = trim(shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $maraschino_cfg[INSTALLURL]/commits/$maraschino_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" ));		
+}
+?>
+
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/maraschino/device_status.png'>
+			<?if ($maraschino_installed=="yes"):?>	
+				<?if ($maraschino_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$maraschino_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$maraschino_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($maraschino_installed=="yes"):?>
+		<?if ($maraschino_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="maraschino_start_stop" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino stop">
+					<input type="submit" name="runCmd" value="Stop">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="maraschino_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino restart">
+					<input type="submit" name="runCmd" value="Restart">
+				</form>
+			</div>			
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="maraschino_start" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="maraschino_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($maraschino_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="maraschino_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="maraschino_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="maraschino_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($maraschino_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">Installed from <?=$maraschino_cfg[BRANCH]?> branch of <?=$maraschino_cfg[INSTALLURL]?> site</p>
+		<? if ($maraschino_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$maraschino_datasize?>
+		<? endif; ?>
+			<?=$maraschino_datacheck?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$maraschino_plgver;?></b></p>
+		<? if (strcmp($maraschino_curversion, $maraschino_newversion)!=0 && $maraschino_curversion!="couldn't determine the maraschino version"): ?>
+			<center>
+				<form name="maraschino_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$maraschino_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/maraschino/new_config.png'></span>
+	</div>
+	<form name="maraschino_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.maraschino">
+		<table class="settings">
+			<tr>
+				<td>Enable maraschino:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($maraschino_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($maraschino_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$maraschino_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($maraschino_cfg['DATADIR']!=$maraschino_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$maraschino_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$maraschino_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($maraschino_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($maraschino_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($maraschino_cfg['RUNAS'] != "root" && $maraschino_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$maraschino_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($maraschino_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($maraschino_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$maraschino_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+						<tr>
+				<td>Show Data Persistency Information:</td>
+				<td>
+					<select name="arg7" size="1">
+						<?=mk_option($maraschino_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($maraschino_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
+			<? if ($maraschino_installed=="no"): ?>
+				<input type="button" value="Show advanced configuration" style="margin-bottom:35px" onClick="if (this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display != '') { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = ''; this.innerText = ''; this.value = 'Hide advanced configuration'; } else { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = 'none'; this.innerText = ''; this.value = 'Show advanced configuration'; }">
+			<? endif; ?>
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+		<div>
+			<div style="display: none;">
+				<br />
+				<table class="settings">
+					<tr>
+						<td style="width:auto">Install from:</td>
+						<td>
+							<select name="url" size="1" onChange="checkURL(this.form);">
+								<?=mk_option($maraschino_cfg['INSTALLURL'], "https://github.com/mrkipling/maraschino", "official github");?>
+								<option value='other'<?=($maraschino_cfg['INSTALLURL'] != "https://github.com/mrkipling/maraschino")?" selected=yes":"" ;?>>other github</option>
+							</select>
+							<input type="hidden" name="arg8" maxlength="100" style="text-align:left;width:63%" value="<?=$maraschino_cfg['INSTALLURL'];?>">
+							<img src="/plugins/maraschino/information.png" title="Installing from other than official github site is not recommended. Use this option at your own risk!"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="width:auto">Specify branch:</td>
+						<td>
+							<select name="branch" size="1" onChange="checkBRANCH(this.form);">
+								<?=mk_option($maraschino_cfg['BRANCH'], "master", "master");?>
+								<option value='other'<?=($maraschino_cfg['BRANCH'] != "master")?" selected=yes":"" ;?>>other</option>
+							</select>
+							<input type="hidden" name="arg9" maxlength="40" style="text-align:left;width:71%" value="<?=$maraschino_cfg['BRANCH'];?>">
+							<img src="/plugins/maraschino/information.png" title="Installing other branch than master is not recommended. Use this option at your own risk!"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</form>
+	<br />
+</div>
+
+<script type="text/javascript">
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$maraschino_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$maraschino_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+
+function checkURL(form)
+{
+	if (form.url.selectedIndex < 1 )
+	{
+		form.arg8.value = form.url.options[form.url.selectedIndex].value;
+		form.arg8.type = "hidden";
+	}
+	else
+	{
+		form.arg8.value = "<?=$maraschino_cfg['INSTALLURL'];?>";
+		form.arg8.type = "text";
+	}
+}
+
+function checkBRANCH(form)
+{
+	if (form.branch.selectedIndex < 1 )
+	{
+		form.arg9.value = form.branch.options[form.branch.selectedIndex].value;
+		form.arg9.type = "hidden";
+	}
+	else
+	{
+		form.arg9.value = "<?=$maraschino_cfg['BRANCH'];?>";
+		form.arg9.type = "text";
+	}
+}
+checkUSER(document.maraschino_settings);
+checkDATADIR(document.maraschino_settings);
+checkSTORAGE(document.maraschino_settings);
+checkDATA(document.maraschino_settings);
+checkURL(document.maraschino_settings);
+checkBRANCH(document.maraschino_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/maraschino/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+source /boot/config/plugins/maraschino/maraschino.cfg
+if [ $SERVICE = enable ]; then
+/etc/rc.d/rc.maraschino start
+fi
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/maraschino/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.maraschino stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/maraschino-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/maraschino/maraschino.cfg
+
+# create maraschino-writable directory for pid file
+if [ ! -e /var/run/maraschino ]; then
+	mkdir /var/run/maraschino
+	chown $RUNAS:users /var/run/maraschino
+	chmod 0777 /var/run/maraschino
+fi
+rm /tmp/maraschino-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/maraschino">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
