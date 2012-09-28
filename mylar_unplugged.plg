@@ -1,0 +1,702 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This Plugin installs and controls mylar for UnRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits:
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+
+WW: Some config page formatting
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
+
+-->
+
+<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
+<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+</FILE>
+<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
+<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
+</FILE>
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
+</FILE>
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/mylar/mylar.png">
+<URL>http://i.imgur.com/YliMD.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/mylar-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+rm -f /etc/rc.d/rc.mylar
+rm -f -R /usr/local/emhttp/plugins/mylar
+[ -f /boot/config/plugins/mylar/plgver.txt ] && rm -f /boot/config/plugins/mylar/plgver.txt
+rm /tmp/mylar-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/mylar/plgver.txt">
+<INLINE>
+<![CDATA[
+1.7
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/mylar/mylar.cfg">
+<INLINE>
+<![CDATA[
+# mylar configuration
+SERVICE="disable"
+INSTALLDIR="/usr/local/mylar"
+DATADIR="/usr/local/mylar"
+PORT="8088"
+RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+]]>
+</INLINE>
+</FILE>
+
+
+
+<FILE Name="/etc/rc.d/rc.mylar" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# Start/stop/restart/enable/disable mylar.
+
+mylar_start()
+{
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+	fi
+
+	# no-op if already running
+	if [ -r /var/run/mylar/mylar-$PORT.pid ]; then
+		return
+	fi
+	
+	# if directory doesn't exist or mylar is not found, install it
+	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/Mylar.py" ]]; then
+		mylar_install
+	fi
+	
+	if [ ! -d $DATADIR ]; then
+		mkdir $DATADIR
+        chown -R nobody:users $DATADIR
+	    chmod -R 777 $DATADIR
+	fi
+
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Mylar.py -d -p $PORT --datadir $DATADIR --nolaunch --pidfile /var/run/mylar/mylar-$PORT.pid"
+	echo -n "Starting mylar:  $CMDLINE"
+	$CMDLINE
+	echo
+  
+	while [ ! -e /var/run/mylar/mylar-$PORT.pid  ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+mylar_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/mylar/mylar-$PORT.pid ]; then
+		return
+	fi
+	
+	echo "Stopping mylar..."
+	sleep 1
+	kill $(cat /var/run/mylar/mylar-$PORT.pid)
+	sleep 3
+  
+	if [ -f /var/run/mylar/mylar-$PORT.pid ]; then
+		rm /var/run/mylar/mylar-$PORT.pid
+	fi
+  
+	while [ -e /var/run/mylar/mylar-$PORT.pid  ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+mylar_restart()
+{
+	mylar_stop
+	sleep 1
+	mylar_start
+}
+
+mylar_buttonstart()
+{
+echo "Enabling Mylar"
+	CONFIG="/boot/config/plugins/mylar/mylar.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting mylar"
+	mylar_start
+	fi
+}
+
+mylar_update()
+{
+	mylar_stop
+	sleep 1
+	mylar_install
+	sleep 1
+	mylar_start
+}
+
+write_config()
+{
+	echo "# mylar configuration" > /boot/config/plugins/mylar/mylar.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/mylar/mylar.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/mylar/mylar.cfg
+	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/mylar/mylar.cfg
+	echo "PORT=\"$PORT\"" >> /boot/config/plugins/mylar/mylar.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/mylar/mylar.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/mylar/mylar.cfg
+	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/mylar/mylar.cfg
+
+ }
+
+mylar_change_settings()
+{
+	PORT="$2"
+	INSTALLDIR="$3"
+	DATADIR="$4"
+	
+	if [ $DATADIR == "" ]; then
+		$DATADIR="$INSTALLDIR"
+	fi
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$INSTALLDIR" "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$5"
+	PLG_DATACHECK="$6"
+	
+	# create Mylar user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+mylar_enable()
+{
+	# if not already enabled, enable it
+		SERVICE=enable
+		mylar_stop
+		mylar_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+        mylar_start
+}
+
+mylar_disable()
+{
+	mylar_stop
+	SERVICE=disable
+	mylar_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+	write_config
+}
+
+mylar_install()
+{	
+	echo "installing latest Version of mylar"
+	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p $INSTALLDIR
+    fi
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p $DATADIR
+    fi
+	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+	
+	cd /tmp
+	git clone -b master https://github.com/evilhero/mylar/ $INSTALLDIR
+	
+	if [ ! -e "$DATADIR/ComicRN.py" ]; then
+		mv $INSTALLDIR/sabnzbd/ComicRN.py $DATADIR/ComicRN.py
+		ln -s $DATADIR/ComicRN.py $INSTALLDIR/sabnzbd/ComicRN.py
+	else
+		rm $INSTALLDIR/sabnzbd/ComicRN.py
+		ln -s $DATADIR/ComicRN.py $INSTALLDIR/sabnzbd/ComicRN.py
+	fi
+	
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+}
+
+mylar_storagesize() 
+{
+	if [ $1 ] && [ $2 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+	
+		if [ -d $2 ]; then
+			DAT=`du -sh $2 | cut -f1`
+		elif [ -f $2 ]; then
+			DAT=`ls -lah $2 | awk '{ print $5}'`
+		fi
+		
+		if [ $1 == $2 ]; then
+			echo "<p style="margin-left:10px\;">Storage memory usage: install + data directory: <b>$INST</b></p>"
+		else
+			echo "<p style="margin-left:10px\;">Storage memory usage: install directory: <b>$INST</b>, data directory: <b>$DAT</b></p>"
+		fi
+	elif [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
+mylar_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b> Your Data Directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b> Your Data Directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+mylar_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f mylar_unplugged.plg ]; then
+	[ -f mylar_unplugged.plg.old ] && rm -f mylar_unplugged.plg.old
+	mv mylar_unplugged.plg mylar_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/mylar_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/mylar_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/mylar_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/mylar_unplugged.plg
+	fi
+}
+mylar_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f mylar_unplugged.plg.old ]; then
+	rm -f /mylar_unplugged.plg
+	mv mylar_unplugged.plg.old mylar_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/mylar_unplugged.plg
+	fi
+}
+mylar_vercheck()
+{
+	cd $INSTALLDIR
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
+
+# read our configuration
+source /boot/config/plugins/mylar/mylar.cfg
+
+case "$1" in
+	'start')
+		mylar_start
+	;;
+	'stop')
+		mylar_stop
+	;;
+	'restart')
+		mylar_restart
+	;;
+	'enable')
+		mylar_enable $2 $3 $4 $5 $6 $7 $8
+	;;
+	'disable')
+		mylar_disable $2 $3 $4 $5 $6 $7 $8
+	;;
+	'install')
+		mylar_install
+	;;
+	'update')
+		mylar_update
+	;;
+	'storagesize')
+		mylar_storagesize $2 $3
+	;;
+	'datacheck')
+		mylar_datacheck
+	;;
+	'updateplg')
+		mylar_updateplg
+	;;
+	'downgradeplg')
+		mylar_downgradeplg
+	;;
+	'buttonstart')
+		mylar_buttonstart
+	;;
+	'vercheck')
+		mylar_vercheck
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/mylar/mylar.page">
+<INLINE>
+<![CDATA[
+Menu="NetworkServices"
+Icon="mylar.png"
+Version="0.2"
+Author="Influencer; ChronoStriker1"
+Type="php"
+Title="Mylar"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/mylar/mylar.png">
+<LOCAL>/boot/config/plugins/mylar/mylar.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/mylar/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/mylar/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/mylar/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+<FILE Name="/usr/local/emhttp/plugins/mylar/mylar.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$mylar_cfg = parse_ini_file( "/boot/config/plugins/mylar/mylar.cfg");
+$mylar_installed = file_exists( $mylar_cfg["INSTALLDIR"] . "/Mylar.py" ) ? "yes" : "no";
+$mylar_rollback = file_exists( "/boot/config/plugins/mylar_unplugged.plg.old" ) ? "yes" : "no";
+if ($mylar_installed=="yes")
+{
+	if ($mylar_cfg[PLG_STORAGESIZE]=="yes")
+		$mylar_datasize = shell_exec ( "/etc/rc.d/rc.mylar storagesize $mylar_cfg[INSTALLDIR] $mylar_cfg[DATADIR]" );
+	if ($mylar_cfg[PLG_DATACHECK]=="yes")
+		$mylar_datacheck = shell_exec ( "/etc/rc.d/rc.mylar datacheck" );
+	$mylar_plgver = shell_exec ( "cat /boot/config/plugins/mylar/plgver.txt" );
+	$mylar_running = file_exists( "/var/run/mylar/mylar-".$mylar_cfg['PORT'].".pid") ? "yes" : "no";
+	if (file_exists($mylar_cfg["INSTALLDIR"] . "/Mylar.py"))
+		$mylar_curversion = shell_exec( "/etc/rc.d/rc.mylar vercheck" );
+	else
+		$mylar_curversion = "Update at the bottom of the Mylar web page first"; 
+	$mylar_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/evilhero/mylar/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
+	$mylar_installdirsize = trim(shell_exec( "if [ -e $mylar_cfg[INSTALLDIR] ]; then du -sh $mylar_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
+	$mylar_datadirsize = trim(shell_exec( "if [ -e $mylar_cfg[DATADIR] ]; then du -sh $mylar_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
+}
+?>
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/mylar/device_status.png'>
+			<?if ($mylar_installed=="yes"):?>	
+				<?if ($mylar_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$mylar_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$mylar_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($mylar_installed=="yes"):?>
+		<?if ($mylar_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="mylar_start_stop" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar stop">
+					<input type="submit" name="runCmd" value="Stop">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="mylar_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar restart">
+					<input type="submit" name="runCmd" value="Restart">
+				</form>
+			</div>			
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="mylar_buttonstart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="mylar_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($mylar_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="mylar_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="mylar_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="mylar_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($mylar_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">Mylar is installed with version: <?=$mylar_curversion;?></p>
+		<? if ($mylar_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$mylar_datasize?>
+		<? endif; ?>
+		<? if ($mylar_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$mylar_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$mylar_plgver;?></b></p>
+		<? if (strcmp($mylar_curversion, $mylar_newversion)!=0 && $mylar_curversion!="couldn't determine the Mylar version"): ?>
+			<center>
+				<form name="mylar_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$mylar_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/mylar/new_config.png'></span>
+	</div>
+	<form name="mylar_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar">
+		<table class="settings">
+			<tr>
+				<td>Enable Mylar:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($mylar_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($mylar_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$mylar_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($mylar_cfg['DATADIR']!=$mylar_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$mylar_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$mylar_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($mylar_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($mylar_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($mylar_cfg['RUNAS'] != "root" && $mylar_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$mylar_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($mylar_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($mylar_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$mylar_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($mylar_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($mylar_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$mylar_cfg['PLG_DATACHECK'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:35px">
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+	</form>
+	<br />
+</div>
+<script type="text/javascript">
+
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$mylar_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$mylar_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+checkINSTALLDIR(document.mylar_settings);
+checkUSER(document.mylar_settings);
+checkDATADIR(document.mylar_settings);
+checkSTORAGE(document.mylar_settings);
+checkDATA(document.mylar_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/mylar/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+source /boot/config/plugins/mylar/mylar.cfg
+if [ $SERVICE = enable ]; then
+/etc/rc.d/rc.mylar start
+fi
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/mylar/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.mylar stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/mylar-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/mylar/mylar.cfg
+
+# create mylar-writable directory for pid file
+if [ ! -e /var/run/mylar ]; then
+  mkdir /var/run/mylar
+  chown $RUNAS:users /var/run/mylar
+  chmod 0777 /var/run/mylar
+fi
+rm /tmp/mylar-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/mylar">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
