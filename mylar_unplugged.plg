@@ -10,6 +10,8 @@ Benni-Chan: Originally creating the plug-in. Much of his code is still in
 
 WW: Some config page formatting
 
+ChronoStriker: Ported mylar over to the plug-in. I've agreed to help maintain the plug-in for/with Chronostriker.
+
 I have...
  * probably missed some credits here, not intentional but I do not have a perfect memory!
  * made changes and added features myself. I have removed the changelog from the plug-in itself.
@@ -62,7 +64,7 @@ rm /tmp/mylar-cleanup
 <FILE Name="/boot/config/plugins/mylar/plgver.txt">
 <INLINE>
 <![CDATA[
-1.7
+1.0
 ]]>
 </INLINE>
 </FILE>
