@@ -86,7 +86,17 @@ PLG_DATACHECK="yes"
 </INLINE>
 </FILE>
 
-
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
 
 <FILE Name="/etc/rc.d/rc.headphones" Mode="0770">
 <INLINE>
@@ -392,7 +402,7 @@ esac
 <FILE Name="/usr/local/emhttp/plugins/headphones/headphones.page">
 <INLINE>
 <![CDATA[
-Menu="NetworkServices"
+Menu="unplugged"
 Icon="headphones.png"
 Version="0.2"
 Author="Influence; Wojciech Walaszek"

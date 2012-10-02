@@ -124,6 +124,18 @@ port = 8082
 </INLINE>
 </FILE>
 
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/etc/rc.d/rc.couchpotato_v2" Mode="0770">
 <INLINE>
 <![CDATA[
@@ -443,7 +455,7 @@ esac
 <FILE Name="/usr/local/emhttp/plugins/couchpotato_v2/couchpotato_v2.page">
 <INLINE>
 <![CDATA[
-Menu="NetworkServices"
+Menu="unplugged"
 Icon="couchpotato_v2.png"
 Version="0.7"
 Author="Wojciech Walaszek; Influencer"

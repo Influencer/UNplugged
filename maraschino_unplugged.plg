@@ -109,6 +109,18 @@ rm /tmp/checkconfig
 </INLINE>
 </FILE>
 
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/etc/rc.d/rc.maraschino" Mode="0770">
 <INLINE>
 <![CDATA[
@@ -411,7 +423,7 @@ esac
 <FILE Name="/usr/local/emhttp/plugins/maraschino/maraschino.page">
 <INLINE>
 <![CDATA[
-Menu="NetworkServices"
+Menu="unplugged"
 Icon="maraschino.png"
 Version="1.0"
 Author="Benjamin Waller; Influencer"

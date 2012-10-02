@@ -10,7 +10,7 @@ Benni-Chan: Originally creating the plug-in. Much of his code is still in
 
 WW: Some config page formatting
 
-ChronoStriker: Ported mylar over to the plug-in. I've agreed to help maintain the plug-in for/with Chronostriker.
+ChronoStriker: Ported mylar over to the plug-in. Ive agreed to help maintain the plug-in for/with Chronostriker.
 
 I have...
  * probably missed some credits here, not intentional but I do not have a perfect memory!
@@ -84,7 +84,17 @@ PLG_DATACHECK="yes"
 </INLINE>
 </FILE>
 
-
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
 
 <FILE Name="/etc/rc.d/rc.mylar" Mode="0770">
 <INLINE>
@@ -399,7 +409,7 @@ esac
 <FILE Name="/usr/local/emhttp/plugins/mylar/mylar.page">
 <INLINE>
 <![CDATA[
-Menu="NetworkServices"
+Menu="unplugged"
 Icon="mylar.png"
 Version="0.2"
 Author="Influencer; ChronoStriker1"

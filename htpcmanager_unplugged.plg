@@ -87,6 +87,18 @@ my_port = 8084
 </INLINE>
 </FILE>
 
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/etc/rc.d/rc.htpcmanager" Mode="0770">
 <INLINE>
 <![CDATA[
@@ -410,7 +422,7 @@ esac
 <FILE Name="/usr/local/emhttp/plugins/htpcmanager/htpcmanager.page">
 <INLINE>
 <![CDATA[
-Menu="NetworkServices"
+Menu="unplugged"
 Icon="htpcmanager.png"
 Version="0.7"
 Author="Influencer"
