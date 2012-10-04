@@ -62,7 +62,7 @@ rm /tmp/maraschino-cleanup
 <FILE Name="/boot/config/plugins/maraschino/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0
+1.1
 ]]>
 </INLINE>
 </FILE>

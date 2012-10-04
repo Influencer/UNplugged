@@ -78,7 +78,7 @@ rm /tmp/sabnzbd-cleanup
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.3
+2.4
 ]]>
 </INLINE>
 </FILE>

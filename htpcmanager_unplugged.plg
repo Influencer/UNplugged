@@ -58,7 +58,7 @@ rm /tmp/htpcmanager-cleanup
 <FILE Name="/boot/config/plugins/htpcmanager/plgver.txt">
 <INLINE>
 <![CDATA[
-0.5
+1.0
 ]]>
 </INLINE>
 </FILE>
