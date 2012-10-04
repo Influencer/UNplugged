@@ -312,7 +312,7 @@ sickbeard_install()
 	
 	cd /tmp
 	git clone -b $BRANCH $INSTALLURL Sick-Beard
-	cp -Rf /tmp/Sick-Beard/* $INSTALLDIR
+	cp -Rfu //tmp/Sick-Beard/* $INSTALLDIR
 	rm -Rf /tmp/Sick-Beard
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
