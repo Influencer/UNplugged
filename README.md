@@ -38,6 +38,8 @@ Right click and save link as;
 -  [Headphones_unplugged.plg](https://github.com/influencer/unplugged/raw/master/headphones_unplugged.plg)
 -  [Htpcmanager_unplugged.plg](https://github.com/influencer/unplugged/raw/master/htpcmanager_unplugged.plg)
 -  [Darkstat-1.0_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_unplugged.plg)
+-  [Mylar_unplugged.plg](https://github.com/influencer/unplugged/raw/master/mylar_unplugged.plg)
+-  [Maraschino_unplugged.plg](https://github.com/influencer/unplugged/raw/master/maraschino_unplugged.plg)
 
 ###Special Thanks:
 
