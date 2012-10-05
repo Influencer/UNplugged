@@ -26,6 +26,10 @@ I have...
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
 <MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
 </FILE>
+<FILE Name="/boot/packages/libidn-1.5-i486-4.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.1/slackware/l/libidn-1.5-i486-1.txz</URL>
+<MD5>d46567dac26c0e1d631fdc96ba926953</MD5>
+</FILE>
 <FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
 <URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
 <MD5>9535ac8193f269729467357b068117aa</MD5>
@@ -70,7 +74,7 @@ rm /tmp/sickbeard-cleanup
 <FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
 <INLINE>
 <![CDATA[
-2.5
+2.4
 ]]>
 </INLINE>
 </FILE>
@@ -306,13 +310,15 @@ sickbeard_install()
 		mkdir -p $DATADIR
     fi
 	
-	if [ -e ""$DATADIR"/version.txt" ]; then 
-		rm ""$DATADIR"/version.txt"
+	if [ -e ""$INSTALLDIR"/version.txt" ]; then 
+		rm ""$INSTALLDIR"/version.txt"
 	fi
 	
 	cd /tmp
 	git clone -b $BRANCH $INSTALLURL Sick-Beard
-	cp -Rf /tmp/Sick-Beard/* $INSTALLDIR
+	cp -Rfu /tmp/Sick-Beard/* $INSTALLDIR
+	cd /tmp/Sick-Beard/
+	git rev-parse HEAD >> "$INSTALLDIR"/version.txt
 	rm -Rf /tmp/Sick-Beard
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
