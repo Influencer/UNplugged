@@ -27,6 +27,10 @@ I have...
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
 <MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
 </FILE>
+<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
+<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
+</FILE>
 <FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
 <MD5>e32449e0588ef54df8524827028972e8</MD5>
