@@ -15,9 +15,9 @@ WW: Config page formatting, ability to select alternate branches.
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
 <MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
 </FILE>
-<FILE Name="/boot/packages/zlib-1.2.5-x86_64-4.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware64-13.37/slackware64/l/zlib-1.2.5-x86_64-4.txz</URL>
-<MD5>00b55a49e8d6fe7ab575286f04fe215e</MD5>
+<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
+<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
 </FILE>
 <FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
@@ -58,7 +58,7 @@ rm /tmp/htpcmanager-cleanup
 <FILE Name="/boot/config/plugins/htpcmanager/plgver.txt">
 <INLINE>
 <![CDATA[
-0.5
+1.0
 ]]>
 </INLINE>
 </FILE>
