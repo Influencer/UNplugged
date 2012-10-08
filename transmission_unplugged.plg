@@ -1,0 +1,717 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This Plugin installs and controls SABnzbd+ for UnRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+Also this plugin enables easy updates for SABnzbd, since the app doesn't have it's own update routine
+
+Credits:
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+
+WW: Install & Data Directory size, some config page formatting.
+
+I have probably missed some credits here, not intentional but I do not have a perfect memory!
+-->
+
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
+</FILE>
+
+<FILE Name="/boot/packages/libevent-2.0.11-i486-1sl.txz" Run="upgradepkg --install-new">
+<URL>http://repository.slacky.eu/slackware-13.37/libraries/libevent/2.0.11/libevent-2.0.11-i486-1sl.txz</URL>
+<MD5>983db1f4445d017ba6bd3731dc63d499</MD5>
+</FILE>
+
+<FILE Name="/boot/packages/libidn-1.19-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/libidn-1.19-i486-1.txz</URL>
+<MD5>d412b0bd8f1f0731ec3e39702bf3a78c</MD5>
+</FILE>
+
+<FILE Name="/boot/packages/openldap-client-2.4.21-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.oregonstate.edu//slackware-13.1/slackware/n/openldap-client-2.4.21-i486-1.txz</URL>
+<MD5>330d34e3b0d896cd1033fe3eddb3b259</MD5>
+</FILE>
+
+<FILE Name="/boot/packages/transmission-2.42-i486-1sl.txz" Run="upgradepkg --install-new">
+<URL>http://repository.slacky.eu/slackware-13.37/network/transmission/2.42/transmission-2.42-i486-1sl.txz</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/transmission/transmission.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/transmission.png</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/transmission-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+[ -d /usr/local/emhttp/plugins/transmission ] && rm -f -R /usr/local/emhttp/plugins/transmission
+[ -f /etc/rc.d/rc.transmission ] && rm -f /etc/rc.d/rc.transmission
+[ -f /boot/config/plugins/transmission/plgver.txt ] && rm -f /boot/config/plugins/transmission/plgver.txt
+rm /tmp/transmission-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/transmission/settings.json">
+<INLINE>
+<![CDATA[
+{
+    "alt-speed-down": 50, 
+    "alt-speed-enabled": false, 
+    "alt-speed-time-begin": 540, 
+    "alt-speed-time-day": 127, 
+    "alt-speed-time-enabled": false, 
+    "alt-speed-time-end": 1020, 
+    "alt-speed-up": 50, 
+    "bind-address-ipv4": "0.0.0.0", 
+    "bind-address-ipv6": "::", 
+    "blocklist-enabled": false, 
+    "blocklist-url": "http://www.example.com/blocklist", 
+    "cache-size-mb": 4, 
+    "dht-enabled": true, 
+    "download-dir": "//Downloads", 
+    "download-queue-enabled": true, 
+    "download-queue-size": 5, 
+    "encryption": 1, 
+    "idle-seeding-limit": 30, 
+    "idle-seeding-limit-enabled": false, 
+    "incomplete-dir": "//Downloads", 
+    "incomplete-dir-enabled": false, 
+    "lpd-enabled": false, 
+    "message-level": 2, 
+    "peer-congestion-algorithm": "", 
+    "peer-limit-global": 240, 
+    "peer-limit-per-torrent": 60, 
+    "peer-port": 51413, 
+    "peer-port-random-high": 65535, 
+    "peer-port-random-low": 49152, 
+    "peer-port-random-on-start": false, 
+    "peer-socket-tos": "default", 
+    "pex-enabled": true, 
+    "pidfile": "/var/run/transmission/transmission.pid", 
+    "port-forwarding-enabled": true, 
+    "preallocation": 1, 
+    "prefetch-enabled": 1, 
+    "queue-stalled-enabled": true, 
+    "queue-stalled-minutes": 30, 
+    "ratio-limit": 2, 
+    "ratio-limit-enabled": false, 
+    "rename-partial-files": true, 
+    "rpc-authentication-required": false, 
+    "rpc-bind-address": "0.0.0.0", 
+    "rpc-enabled": true, 
+    "rpc-password": "{5ab50821078362b5cd3940ab97bd75d3a8d30755UVuy99rX", 
+    "rpc-port": 9091, 
+    "rpc-url": "/transmission/", 
+    "rpc-username": "", 
+    "rpc-whitelist": "127.0.0.1", 
+    "rpc-whitelist-enabled": false, 
+    "scrape-paused-torrents-enabled": true, 
+    "script-torrent-done-enabled": false, 
+    "script-torrent-done-filename": "", 
+    "seed-queue-enabled": false, 
+    "seed-queue-size": 10, 
+    "speed-limit-down": 100, 
+    "speed-limit-down-enabled": false, 
+    "speed-limit-up": 100, 
+    "speed-limit-up-enabled": false, 
+    "start-added-torrents": true, 
+    "trash-original-torrent-files": false, 
+    "umask": 18, 
+    "upload-slots-per-torrent": 14, 
+    "utp-enabled": true
+}
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/transmission/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/transmission/transmission.cfg">
+<INLINE>
+<![CDATA[
+# transmission configuration
+SERVICE="disable"
+DATADIR="/usr/local/transmission"
+RUNAS="nobody"
+PORT="9091"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.transmission" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# start|stop|restart|enable|disable|install|update|storagesize|datacheck SABnzbd.
+tranpackage=transmission-2.42-i486-1sl.txz
+transmission_start()
+{
+	# enable service is disabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG
+	fi
+  
+	# no-op if already running
+	if [ -r /var/run/transmission/transmission.pid ]; then
+		return
+	fi
+
+	# if directory doesn't exist or Transmission is not found, install it
+	if [ ! -e "/usr/bin/transmission-cli" ]; then
+		transmission_install
+	fi
+	
+	if [ ! -e "$DATADIR" ]; then
+	mkdir -p $DATADIR
+	cp /boot/config/plugins/transmission/settings.json $DATADIR/settings.json
+	chown -R $RUNAS:users $DATADIR
+	chmod -R 755 $DATADIR
+	chmod 600 $DATADIR/settings.json
+	elif [ ! -e "$DATADIR/settings.json" ]; then
+	cp /boot/config/plugins/transmission/settings.json $DATADIR/settings.json
+	chown $RUNAS:users $DATADIR/settings.json
+	chmod 600 $DATADIR/settings.json	
+	fi
+	
+    CMDLINE="sudo -u $RUNAS transmission-daemon --port $PORT --config-dir $DATADIR --pid-file /var/run/transmission/transmission.pid"
+    echo -n "Starting transmission:  $CMDLINE"
+	nohup $CMDLINE > /dev/null 2>&1 &
+	
+	TIMER=0
+	while [ ! -e /var/run/transmission/transmission.pid ]; do
+		sleep 1
+		let TIMER=$TIMER+1
+	        echo -n $TIMER
+	        if [ $TIMER -gt 10 ]; then
+        	        echo -n "transmission.pid not created for some reason"
+                	break
+        	fi
+
+	done
+	echo "... OK"
+}
+
+transmission_stop() {
+  # no-op if not running
+  if [ ! -r /var/run/transmission/transmission.pid ]; then
+    return
+  fi
+
+  echo -n "Stopping transmission..."
+  sleep 0.5
+  echo
+
+  kill $(cat /var/run/transmission/transmission.pid)
+  
+  if [ -e /var/run/transmission/transmission.pid ]; then
+		kill -9 $(cat /var/run/transmission/transmission.pid )
+		rm -rf /var/run/transmission/transmission.pid
+  fi
+  
+  echo "...OK"
+  sleep 1
+}
+transmission_restart()
+{
+	transmission_stop
+	sleep 3
+	transmission_start
+}
+
+transmission_buttonstart()
+{
+echo "Enabling Transmission"
+	CONFIG="/boot/config/plugins/transmission/transmission.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting transmission"
+	transmission_start
+	fi
+}
+
+write_config() {
+  echo "# transmission configuration" > /boot/config/plugins/transmission/transmission.cfg
+  echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/transmission/transmission.cfg
+  echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/transmission/transmission.cfg
+  echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/transmission/transmission.cfg
+  echo "PORT=\"$PORT\"" >> /boot/config/plugins/transmission/transmission.cfg
+}
+
+transmission_change_settings()
+{
+	PORT="$2"
+	DATADIR="$3"
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$4"
+	PLG_DATACHECK="$5"
+	
+	# create transmission user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+
+transmission_enable()
+{
+	SERVICE=enable
+	    transmission_stop
+		transmission_change_settings $1 $2 $3 $4 $5
+		write_config
+		transmission_start
+}
+
+transmission_disable()
+{
+	transmission_stop
+	SERVICE=disable
+	transmission_change_settings $1 $2 $3 $4 $5
+	write_config
+}
+
+transmission_install()
+{	
+	echo "Installing Transmission..."
+
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p "$DATADIR"
+	fi
+	if [ -e /boot/packages/$tranpackage ]; then
+	/sbin/installpkg /boot/packages/$tranpackage
+	else
+	echo "Transmission package doesn't exist, aborting!"
+	fi
+}
+
+transmission_storagesize() 
+{
+	if [ $1 ]; then
+		
+		if [ -d $1 ]; then
+			DAT=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			DAT=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		
+		echo "<p style="margin-left:10px\;">Storage memory usage: data directory: <b>$DAT</b></p>"
+	fi
+}
+
+transmission_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your data directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your data directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;margin-right:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+transmission_updateplg()
+{
+	cd /boot/config/plugins
+	[ -f transmission_unplugged.plg.old ] && rm -f transmission_unplugged.plg.old
+	if [ -f transmission_unplugged.plg ]; then
+	mv transmission_unplugged.plg transmission_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/transmission_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/transmission_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/transmission_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/transmission_unplugged.plg
+	fi
+}
+transmission_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f transmission_unplugged.plg.old ]; then
+	rm -f /transmission_unplugged.plg
+	mv transmission_unplugged.plg.old transmission_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/transmission_unplugged.plg
+	fi
+}
+
+# read our configuration
+source /boot/config/plugins/transmission/transmission.cfg
+
+case "$1" in
+	'start')
+		transmission_start
+	;;
+	'stop')
+		transmission_stop
+	;;
+	'restart')
+		transmission_restart
+	;;
+	'enable')
+		transmission_enable $2 $3 $4 $5
+	;;
+	'disable')
+		transmission_disable $2 $3 $4 $5
+	;;
+	'install')
+		transmission_install
+	;;	
+	'storagesize')
+		transmission_storagesize $3
+	;;
+	'datacheck')
+		transmission_datacheck
+	;;
+	'updateplg')
+		transmission_updateplg
+	;;
+	'downgradeplg')
+		transmission_downgradeplg
+	;;
+	'buttonstart')
+		transmission_buttonstart
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|storagesize|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/transmission/transmission.page">
+<INLINE>
+<![CDATA[
+Menu="unplugged"
+Icon="transmission.png"
+Version="0.8"
+Author="Benjamin Waller; Influencer; Others!"
+Type="php"
+Title="Transmission"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/transmission/transmission.png">
+<LOCAL>/boot/config/plugins/transmission/transmission.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/transmission/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/transmission/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/transmission/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/transmission/transmission.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$transmission_cfg = parse_ini_file( "/boot/config/plugins/transmission/transmission.cfg" );
+$transmission_installed = file_exists( "/usr/bin/transmission-cli" ) ? "yes" : "no";
+$transmission_rollback = file_exists( "boot/config/plugins/transmission_unplugged.plg.old" ) ? "yes" : "no";
+$transmission_plgver = shell_exec ( "cat /boot/config/plugins/transmission/plgver.txt" );
+if ($transmission_installed=="yes") 
+{
+	$transmission_running = file_exists( "/var/run/transmission/transmission.pid") ? "yes" : "no";
+			
+	if ($transmission_cfg[PLG_STORAGESIZE]=="yes") {
+		$transmission_datasize = shell_exec ( "/etc/rc.d/rc.transmission storagesize $transmission_cfg[DATADIR]" );
+		}
+	if ($transmission_cfg[PLG_DATACHECK]=="yes") {
+		$transmission_datacheck = shell_exec ( "/etc/rc.d/rc.transmission datacheck" );
+		}
+}
+?>
+
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/transmission/device_status.png'>
+			<?if ($transmission_installed=="yes"):?>	
+				<?if ($transmission_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$transmission_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($transmission_installed=="yes"):?>
+		<?if ($transmission_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="transmission_start_stop" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission stop">
+					<input type="submit" name="runCmd" value="Stop">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="transmission_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission restart">
+					<input type="submit" name="runCmd" value="Restart">
+				</form>
+			</div>
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="transmission_start" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="transmission_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($transmission_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="transmission_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="transmission_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="transmission_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($transmission_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<? if ($transmission_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$transmission_datasize?>
+		<? endif; ?>
+		<? if ($transmission_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$transmission_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$transmission_plgver;?></b></p>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/transmission/new_config.png'></span>
+	</div>
+	<form name="transmission_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission">
+		<table class="settings">
+			<tr>
+				<td>Enable Transmission:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($transmission_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($transmission_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$transmission_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$transmission_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($transmission_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($transmission_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($transmission_cfg['RUNAS'] != "root" && $transmission_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$transmission_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($transmission_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($transmission_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$transmission_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($transmission_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($transmission_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$transmission_cfg['PLG_DATACHECK'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:35px">
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+	</form>
+	<br />
+</div>
+
+<script type="text/javascript">
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$transmission_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$transmission_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+
+checkUSER(document.transmission_settings);
+checkDATADIR(document.transmission_settings);
+checkSTORAGE(document.transmission_settings);
+checkDATA(document.transmission_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/transmission/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.transmission start
+]]>
+</INLINE>
+</FILE>
+
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/transmission/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.transmission stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/transmission-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/transmission/transmission.cfg
+
+# create transmission-writable directory for pid file
+if [ ! -e /var/run/transmission ]; then
+	mkdir /var/run/transmission
+	chown $RUNAS:users /var/run/transmission
+	chmod 0777 /var/run/transmission
+fi
+rm /tmp/transmission-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/transmission">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
