@@ -2,19 +2,14 @@
 <PLUGIN>
 
 <!--
-This Plugin installs and controls Transmission for UnRaid.
+This Plugin installs and controls SABnzbd+ for UnRaid.
 All dependencies are installed as needed and everything is controlable from the webgui
+Also this plugin enables easy updates for SABnzbd, since the app doesn't have it's own update routine
 
 Credits:
 Benni-Chan: Originally creating the plug-in. Much of his code is still in
 
 WW: Install & Data Directory size, some config page formatting.
-
-Jangjong for his work in helping maintain this plug-in
-
-Sureguy for his work in helping maintain this plug-in
-
-Piotrasd for his work compiling and maintaining for this plug-in
 
 I have probably missed some credits here, not intentional but I do not have a perfect memory!
 -->
@@ -199,16 +194,16 @@ transmission_start()
 		transmission_install
 	fi
 	
-	if [ ! -e "$DATADIR/settings.json" ]; then
-	cp /boot/config/plugins/transmission/settings.json $DATADIR/settings.json
-	chown $RUNAS:users $DATADIR/settings.json
-	chmod 600 $DATADIR/settings.json
-	else
+	if [ ! -e "$DATADIR" ]; then
 	mkdir -p $DATADIR
 	cp /boot/config/plugins/transmission/settings.json $DATADIR/settings.json
 	chown -R $RUNAS:users $DATADIR
 	chmod -R 755 $DATADIR
 	chmod 600 $DATADIR/settings.json
+	elif [ ! -e "$DATADIR/settings.json" ]; then
+	cp /boot/config/plugins/transmission/settings.json $DATADIR/settings.json
+	chown $RUNAS:users $DATADIR/settings.json
+	chmod 600 $DATADIR/settings.json	
 	fi
 	
     CMDLINE="sudo -u $RUNAS transmission-daemon --port $PORT --config-dir $DATADIR --pid-file /var/run/transmission/transmission.pid"
@@ -512,7 +507,7 @@ if ($transmission_installed=="yes")
 				</form>
 			</div>
 		<?else:?>
-			<div style="position:relative;float:left;width:100%;margin-bottom:24px">
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 				<form name="transmission_start" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.transmission buttonstart">
 					<input type="submit" name="runCmd" value="Start">
