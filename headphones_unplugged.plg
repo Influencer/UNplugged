@@ -185,7 +185,15 @@ headphones_update()
 {
 	headphones_stop
 	sleep 1
-	headphones_install
+    echo "installing latest Version of headphones"	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+	cd /tmp
+	git clone -b master https://github.com/rembo10/headphones/
+	cp -Rfu /tmp/headphones/* $INSTALLDIR
+	rm -Rf /tmp/headphones
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 1
 	headphones_start
 }
