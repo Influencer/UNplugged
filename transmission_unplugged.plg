@@ -142,7 +142,7 @@ rm /tmp/transmission-cleanup
 <FILE Name="/boot/config/plugins/transmission/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0
+1.5
 ]]>
 </INLINE>
 </FILE>
