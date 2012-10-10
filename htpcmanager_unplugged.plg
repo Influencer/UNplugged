@@ -769,7 +769,10 @@ checkBRANCH(document.htpcmanager_settings);
 <INLINE>
 <![CDATA[
 #!/bin/bash
+source /boot/config/plugins/htpcmanager/htpcmanager.cfg
+if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.htpcmanager start
+fi
 ]]>
 </INLINE>
 </FILE>

@@ -219,7 +219,10 @@ $darkstat_running = file_exists( "/var/run/darkstat/darkstat.pid") ? "yes" : "no
 <INLINE>
 <![CDATA[
 #!/bin/bash
+source /boot/config/plugins/darkstat/darkstat.cfg
+if [ $SERVICE = enable ]; then
 /etc/rc.d/rc.darkstat start
+fi
 ]]>
 </INLINE>
 </FILE>
