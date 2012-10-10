@@ -162,7 +162,7 @@ sickbeard_start()
 	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/SickBeard.py" ]]; then
 		sickbeard_install
 	fi
-	
+	cd
 	#Check if force-update should be done on startup
 	if [ "$FORCEUPDATE" = "yes" ]; then
 		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --forceupdate --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
