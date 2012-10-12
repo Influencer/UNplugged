@@ -264,9 +264,13 @@ mylar_install()
 	if [ -e ""$DATADIR"/version.txt" ]; then 
 		rm ""$DATADIR"/version.txt"
 	fi
-	
+
 	cd /tmp
-	git clone -b master https://github.com/evilhero/mylar/ $INSTALLDIR
+	env GIT_SSL_NO_VERIFY=true git clone -b master https://github.com/evilhero/mylar/ Mylar
+	cp -Rfu /tmp/Mylar/* $INSTALLDIR
+	cd /tmp/Mylar/
+	git rev-parse HEAD >> "$INSTALLDIR"/version.txt
+	rm -Rf /tmp/Mylar
 	
 	if [ ! -e "$DATADIR/ComicRN.py" ]; then
 		mv $INSTALLDIR/sabnzbd/ComicRN.py $DATADIR/ComicRN.py
@@ -354,10 +358,9 @@ mylar_downgradeplg()
 	fi
 }
 mylar_vercheck()
-{
-	cd $INSTALLDIR
-	curversion=$( git rev-parse HEAD )
-	echo "$curversion"
+{	
+	mylar_curversion=`cat $INSTALLDIR/version.txt`
+	echo "$mylar_curversion"
 }
 
 # read our configuration
@@ -454,7 +457,7 @@ if ($mylar_installed=="yes")
 	$mylar_plgver = shell_exec ( "cat /boot/config/plugins/mylar/plgver.txt" );
 	$mylar_running = file_exists( "/var/run/mylar/mylar-".$mylar_cfg['PORT'].".pid") ? "yes" : "no";
 	if (file_exists($mylar_cfg["INSTALLDIR"] . "/Mylar.py"))
-		$mylar_curversion = shell_exec( "/etc/rc.d/rc.mylar vercheck" );
+		$mylar_curversion = shell_exec( "cat $mylar_cfg[INSTALLDIR]/version.txt" );
 	else
 		$mylar_curversion = "Update at the bottom of the Mylar web page first"; 
 	$mylar_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/evilhero/mylar/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
@@ -537,7 +540,7 @@ if ($mylar_installed=="yes")
 			<?=$mylar_datacheck?>
 		<? endif; ?>
 		<p style="margin-left:10px;"><b>Plug-in Version: <?=$mylar_plgver;?></b></p>
-		<? if (strcmp($mylar_curversion, $mylar_newversion)!=0 && $mylar_curversion!="couldn't determine the Mylar version"): ?>
+		<? if (strcmp($mylar_curversion, $mylar_newversion)!=0 && $mylar_curversion!="Update at the bottom of the Mylar web page first"): ?>
 			<center>
 				<form name="mylar_settings" method="POST" action="/update.htm" target="progressFrame">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.mylar update">
