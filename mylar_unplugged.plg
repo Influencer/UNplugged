@@ -68,7 +68,7 @@ rm /tmp/mylar-cleanup
 <FILE Name="/boot/config/plugins/mylar/plgver.txt">
 <INLINE>
 <![CDATA[
-1.1
+1.2
 ]]>
 </INLINE>
 </FILE>
