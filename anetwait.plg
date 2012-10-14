@@ -1,0 +1,35 @@
+<?xml version='1.0' standalone='yes'?>
+
+<PLUGIN>
+This plug-in is used to work around an issue where your network does not come up
+before plug-ins are installed, leading to "BAD DOWNLOADS".
+
+The plug-in simply runs a while loop until internet access is detected. Once
+access has been detected, the plug-in exits the loop and the rest of your plug-ins 
+continue to install.
+
+In order for this plug-in to work, it MUST be the alphabetical first plug-in.
+
+All credit for this plug-in goes to Lime-tech Forum user sensine.
+
+<!-- wait for Internet access -->
+<FILE Name="/tmp/tomsinetwait" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+x=`ping -c1 google.com 2>&1 | grep -i unknown`
+COUNT=0
+while [ $COUNT -lt 10 ]; do
+        if [ ! "$x" = "" ]; then
+        echo "Waiting for Internet access"
+        sleep 10
+        fi
+        let COUNT=COUNT+1
+        
+done
+rm /tmp/tomsinetwait
+echo "Anetwait.plg is done, internet access detected!"
+]]>
+</INLINE>
+</FILE>
+</PLUGIN>
