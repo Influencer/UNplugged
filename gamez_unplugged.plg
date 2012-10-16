@@ -88,6 +88,59 @@ PLG_DATACHECK="yes"
 </INLINE>
 </FILE>
 
+<FILE Name="/boot/config/plugins/gamez/Gamez.ini">
+<INLINE>
+<![CDATA[
+[global]
+server.socket_host = "0.0.0.0"
+gamez_port = 8085
+user_name = ""
+password = ""
+debug_enabled =
+
+[NZBMatrix]
+username = ""
+api_key = ""
+
+[Newznab]
+api_key = ""
+wii_category_id = "1030"
+xbox360_category_id = "1050"
+host = ""
+port = 
+
+[Sabnzbd]
+api_key = ""
+host = "127.0.0.1"
+port = 8080
+category = ""
+
+[Scheduler]
+download_interval = 60
+game_list_update_interval = 1440
+
+[Notifications]
+prowl_api = ""
+growl_host = ""
+growl_port = 23053
+growl_password = ""
+notifo_username = ""
+notifo_apikey = ""
+
+[Blackhole]
+nzb_blackhole_path = ""
+torrent_blackhole_path = ""
+
+[Folders]
+torrent_completed = ""
+nzb_completed = ""
+sabnzbd_completed = ""
+wii_destination = ""
+xbox360_destination = "/usr/local/gamez/xbox360"
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
 <INLINE>
 <![CDATA[
@@ -129,7 +182,7 @@ gamez_start()
 	    chmod -R 777 $DATADIR
 	fi
 
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Gamez.py -d --port $PORT --datadir $DATADIR --nolaunch --pidfile /var/run/gamez/gamez-$PORT.pid"
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Gamez.py -d --port $PORT --datadir $DATADIR --config /boot/config/plugins/gamez/Gamez.ini --nolaunch --pidfile /var/run/gamez/gamez-$PORT.pid"
 	echo -n "Starting gamez:  $CMDLINE"
 	$CMDLINE
 	echo
