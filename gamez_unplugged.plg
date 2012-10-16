@@ -1,0 +1,717 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This Plugin installs and controls gamez for UnRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits:
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+
+WW: Some config page formatting
+
+ChronoStriker1: Ported gamez over to the plug-in.
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
+
+-->
+
+<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
+<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+</FILE>
+<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
+<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
+</FILE>
+<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
+<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
+</FILE>
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
+</FILE>
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/gamez/gamez.png">
+<URL>http://i.imgur.com/HhGYi.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/gamez-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+rm -f /etc/rc.d/rc.gamez
+rm -f -R /usr/local/emhttp/plugins/gamez
+[ -f /boot/config/plugins/gamez/plgver.txt ] && rm -f /boot/config/plugins/gamez/plgver.txt
+rm /tmp/gamez-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/gamez/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/gamez/gamez.cfg">
+<INLINE>
+<![CDATA[
+# gamez configuration
+SERVICE="disable"
+INSTALLDIR="/usr/local/gamez"
+DATADIR="/usr/local/gamez"
+PORT="8089"
+RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer; ChronoStriker1"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.gamez" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# Start/stop/restart/enable/disable gamez.
+
+gamez_start()
+{
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+	fi
+
+	# no-op if already running
+	if [ -r /var/run/gamez/gamez-$PORT.pid ]; then
+		return
+	fi
+	
+	# if directory doesn't exist or gamez is not found, install it
+	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/Gamez.py" ]]; then
+		gamez_install
+	fi
+	
+	if [ ! -d $DATADIR ]; then
+		mkdir $DATADIR
+        chown -R nobody:users $DATADIR
+	    chmod -R 777 $DATADIR
+	fi
+
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Gamez.py -d --port $PORT --datadir $DATADIR --nolaunch --pidfile /var/run/gamez/gamez-$PORT.pid"
+	echo -n "Starting gamez:  $CMDLINE"
+	$CMDLINE
+	echo
+  
+	while [ ! -e /var/run/gamez/gamez-$PORT.pid  ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+gamez_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/gamez/gamez-$PORT.pid ]; then
+		return
+	fi
+	
+	echo "Stopping gamez..."
+	sleep 1
+	kill $(cat /var/run/gamez/gamez-$PORT.pid)
+	sleep 3
+  
+	if [ -f /var/run/gamez/gamez-$PORT.pid ]; then
+		rm /var/run/gamez/gamez-$PORT.pid
+	fi
+  
+	while [ -e /var/run/gamez/gamez-$PORT.pid  ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+gamez_restart()
+{
+	gamez_stop
+	sleep 1
+	gamez_start
+}
+
+gamez_buttonstart()
+{
+echo "Enabling Gamez"
+	CONFIG="/boot/config/plugins/gamez/gamez.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting gamez"
+	gamez_start
+	fi
+}
+
+gamez_update()
+{
+	gamez_stop
+	sleep 1
+    echo "installing latest Version of gamez"	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+	cd /tmp
+	git clone -b TheGamedb https://github.com/avjui/Gamez/
+	cp -Rfu /tmp/gamez/* $INSTALLDIR
+	rm -Rf /tmp/gamez
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+	sleep 1
+	gamez_start
+}
+
+write_config()
+{
+	echo "# gamez configuration" > /boot/config/plugins/gamez/gamez.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/gamez/gamez.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/gamez/gamez.cfg
+	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/gamez/gamez.cfg
+	echo "PORT=\"$PORT\"" >> /boot/config/plugins/gamez/gamez.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/gamez/gamez.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/gamez/gamez.cfg
+	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/gamez/gamez.cfg
+
+ }
+
+gamez_change_settings()
+{
+	PORT="$2"
+	INSTALLDIR="$3"
+	DATADIR="$4"
+	
+	if [ $DATADIR == "" ]; then
+		$DATADIR="$INSTALLDIR"
+	fi
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$INSTALLDIR" "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$5"
+	PLG_DATACHECK="$6"
+	
+	# create Gamez user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+gamez_enable()
+{
+	# if not already enabled, enable it
+		SERVICE=enable
+		gamez_stop
+		gamez_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+        gamez_start
+}
+
+gamez_disable()
+{
+	gamez_stop
+	SERVICE=disable
+	gamez_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+	write_config
+}
+
+gamez_install()
+{	
+	echo "installing latest Version of gamez"
+	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p $INSTALLDIR
+    fi
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p $DATADIR
+    fi
+	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+	
+	cd /tmp
+	git clone -b TheGamedb https://github.com/avjui/Gamez $INSTALLDIR
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+}
+
+gamez_storagesize() 
+{
+	if [ $1 ] && [ $2 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+	
+		if [ -d $2 ]; then
+			DAT=`du -sh $2 | cut -f1`
+		elif [ -f $2 ]; then
+			DAT=`ls -lah $2 | awk '{ print $5}'`
+		fi
+		
+		if [ $1 == $2 ]; then
+			echo "<p style="margin-left:10px\;">Storage memory usage: install + data directory: <b>$INST</b></p>"
+		else
+			echo "<p style="margin-left:10px\;">Storage memory usage: install directory: <b>$INST</b>, data directory: <b>$DAT</b></p>"
+		fi
+	elif [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
+gamez_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b> Your Data Directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b> Your Data Directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+gamez_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f gamez_unplugged.plg ]; then
+	[ -f gamez_unplugged.plg.old ] && rm -f gamez_unplugged.plg.old
+	mv gamez_unplugged.plg gamez_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/gamez_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/gamez_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/gamez_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/gamez_unplugged.plg
+	fi
+}
+gamez_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f gamez_unplugged.plg.old ]; then
+	rm -f /gamez_unplugged.plg
+	mv gamez_unplugged.plg.old gamez_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/gamez_unplugged.plg
+	fi
+}
+gamez_vercheck()
+{
+	cd $INSTALLDIR
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
+
+# read our configuration
+source /boot/config/plugins/gamez/gamez.cfg
+
+case "$1" in
+	'start')
+		gamez_start
+	;;
+	'stop')
+		gamez_stop
+	;;
+	'restart')
+		gamez_restart
+	;;
+	'enable')
+		gamez_enable $2 $3 $4 $5 $6 $7 $8
+	;;
+	'disable')
+		gamez_disable $2 $3 $4 $5 $6 $7 $8
+	;;
+	'install')
+		gamez_install
+	;;
+	'update')
+		gamez_update
+	;;
+	'storagesize')
+		gamez_storagesize $2 $3
+	;;
+	'datacheck')
+		gamez_datacheck
+	;;
+	'updateplg')
+		gamez_updateplg
+	;;
+	'downgradeplg')
+		gamez_downgradeplg
+	;;
+	'buttonstart')
+		gamez_buttonstart
+	;;
+	'vercheck')
+		gamez_vercheck
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/gamez/gamez.page">
+<INLINE>
+<![CDATA[
+Menu="unplugged"
+Icon="gamez.png"
+Version="0.2"
+Author="Influence; Wojciech Walaszek"
+Type="php"
+Title="Gamez"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/gamez/gamez.png">
+<LOCAL>/boot/config/plugins/gamez/gamez.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/gamez/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/gamez/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/gamez/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+<FILE Name="/usr/local/emhttp/plugins/gamez/gamez.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$gamez_cfg = parse_ini_file( "/boot/config/plugins/gamez/gamez.cfg");
+$gamez_installed = file_exists( $gamez_cfg["INSTALLDIR"] . "/Gamez.py" ) ? "yes" : "no";
+$gamez_rollback = file_exists( "/boot/config/plugins/gamez_unplugged.plg.old" ) ? "yes" : "no";
+if ($gamez_installed=="yes")
+{
+	if ($gamez_cfg[PLG_STORAGESIZE]=="yes")
+		$gamez_datasize = shell_exec ( "/etc/rc.d/rc.gamez storagesize $gamez_cfg[INSTALLDIR] $gamez_cfg[DATADIR]" );
+	if ($gamez_cfg[PLG_DATACHECK]=="yes")
+		$gamez_datacheck = shell_exec ( "/etc/rc.d/rc.gamez datacheck" );
+	$gamez_plgver = shell_exec ( "cat /boot/config/plugins/gamez/plgver.txt" );
+	$gamez_running = file_exists( "/var/run/gamez/gamez-".$gamez_cfg['PORT'].".pid") ? "yes" : "no";
+	if (file_exists($gamez_cfg["INSTALLDIR"] . "/Gamez.py"))
+		$gamez_curversion = shell_exec( "/etc/rc.d/rc.gamez vercheck" );
+	else
+		$gamez_curversion = "Update at the bottom of the Gamez web page first"; 
+	$gamez_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/avjui/Gamez/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
+	$gamez_installdirsize = trim(shell_exec( "if [ -e $gamez_cfg[INSTALLDIR] ]; then du -sh $gamez_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
+	$gamez_datadirsize = trim(shell_exec( "if [ -e $gamez_cfg[DATADIR] ]; then du -sh $gamez_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
+}
+?>
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/gamez/device_status.png'>
+			<?if ($gamez_installed=="yes"):?>	
+				<?if ($gamez_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$gamez_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$gamez_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($gamez_installed=="yes"):?>
+		<?if ($gamez_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="gamez_start_stop" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez stop">
+					<input type="submit" name="runCmd" value="Stop">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="gamez_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez restart">
+					<input type="submit" name="runCmd" value="Restart">
+				</form>
+			</div>			
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="gamez_buttonstart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="gamez_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($gamez_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="gamez_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="gamez_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="gamez_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($gamez_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">Gamez is installed with version: <?=$gamez_curversion;?></p>
+		<? if ($gamez_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$gamez_datasize?>
+		<? endif; ?>
+		<? if ($gamez_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$gamez_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$gamez_plgver;?></b></p>
+		<? if (strcmp($gamez_curversion, $gamez_newversion)!=0 && $gamez_curversion!="couldn't determine the Gamez version"): ?>
+			<center>
+				<form name="gamez_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$gamez_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/gamez/new_config.png'></span>
+	</div>
+	<form name="gamez_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez">
+		<table class="settings">
+			<tr>
+				<td>Enable HeadPhones:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($gamez_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($gamez_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$gamez_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($gamez_cfg['DATADIR']!=$gamez_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$gamez_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$gamez_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($gamez_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($gamez_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($gamez_cfg['RUNAS'] != "root" && $gamez_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$gamez_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($gamez_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($gamez_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$gamez_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($gamez_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($gamez_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$gamez_cfg['PLG_DATACHECK'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:35px">
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+	</form>
+	<br />
+</div>
+<script type="text/javascript">
+
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$gamez_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$gamez_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+checkINSTALLDIR(document.gamez_settings);
+checkUSER(document.gamez_settings);
+checkDATADIR(document.gamez_settings);
+checkSTORAGE(document.gamez_settings);
+checkDATA(document.gamez_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/gamez/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+source /boot/config/plugins/gamez/gamez.cfg
+if [ $SERVICE = enable ]; then
+/etc/rc.d/rc.gamez start
+fi
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/gamez/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.gamez stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/gamez-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/gamez/gamez.cfg
+
+# create gamez-writable directory for pid file
+if [ ! -e /var/run/gamez ]; then
+  mkdir /var/run/gamez
+  chown $RUNAS:users /var/run/gamez
+  chmod 0777 /var/run/gamez
+fi
+rm /tmp/gamez-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/gamez">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
