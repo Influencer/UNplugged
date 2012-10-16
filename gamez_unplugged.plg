@@ -456,7 +456,7 @@ if ($gamez_installed=="yes")
 		$gamez_curversion = shell_exec( "/etc/rc.d/rc.gamez vercheck" );
 	else
 		$gamez_curversion = "Update at the bottom of the Gamez web page first"; 
-	$gamez_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/avjui/Gamez/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
+	$gamez_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/avjui/Gamez/commits/TheGamedb.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
 	$gamez_installdirsize = trim(shell_exec( "if [ -e $gamez_cfg[INSTALLDIR] ]; then du -sh $gamez_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
 	$gamez_datadirsize = trim(shell_exec( "if [ -e $gamez_cfg[DATADIR] ]; then du -sh $gamez_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
 }
