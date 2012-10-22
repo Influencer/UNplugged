@@ -154,29 +154,17 @@ sabnzbd_start()
   if [ -f /mnt/cache/apps/sab/sabnzbd.ini ]; then
 		chmod 777 "/mnt/cache/apps/sab/sabnzbd.ini"
 		TIMER=0
-		HTTPS=`cat "/mnt/cache/apps/sab/sabnzbd.ini" | grep 'enable_https' | cut -d' ' -f3`
-			if [ $HTTPS = 0 ]; then
-				while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
-				sleep 1
-				let TIMER=$TIMER+1
-       				echo -n $TIMER
-       				if [ $TIMER -gt 10 ]; then
-        			        echo -n "sabnzbd-$PORT.pid not created for some reason"
-        			        break
-		        	fi
-				
-				done
-			elif [ $HTTPS = 1 ]; then
-				PORT=`cat "/mnt/cache/apps/sab/sabnzbd.ini" | grep 'https_port' | cut -d' ' -f3`
-				while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
-				sleep 1
-				let TIMER=$TIMER+1
-				if [ $TIMER -gt 10 ]; then
-					echo -n "sabnzbd-$PORT.pid not created for some reason"
-					break
-				fi
-				done
-			fi
+
+		while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
+		sleep 1
+		let TIMER=$TIMER+1
+		echo -n $TIMER
+		if [ $TIMER -gt 10 ]; then
+		        echo -n "sabnzbd-$PORT.pid not created for some reason"
+		        break
+		fi
+		
+	       done
 	fi
 }
 
@@ -495,9 +483,9 @@ if ($sabnzbd_installed=="yes")
 {
 	if( (file_exists("$sabnzbd_configfile")) && ($https=="1")) {
 		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'https_port =' | cut -d' ' -f3" ));
-	} else { 
+	} else {
 		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
-			}
+	}
 	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sab_port.".pid") ? "yes" : "no";
 			
 	if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes") {
