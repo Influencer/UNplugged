@@ -66,7 +66,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.3
+2.3.1
 ]]>
 </INLINE>
 </FILE>
@@ -457,8 +457,8 @@ esac
 <![CDATA[
 Menu="unplugged"
 Icon="couchpotato_v2.png"
-Version="0.7"
-Author="Wojciech Walaszek; Influencer"
+Version="2.3.1"
+Author="Wojciech Walaszek; Influencer; Benjamin Waller"
 Type="php"
 Title="CouchPotato v2"
 ]]>
@@ -738,6 +738,16 @@ function checkRUNNING(form)
    }
 }
  
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 ) {
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	} else {
+		form.arg2.value = "<?=$couchpotato_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
 
 function checkDATADIR(form)
 {
