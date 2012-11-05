@@ -17,15 +17,15 @@ All credit for this plug-in goes to Lime-tech Forum user sensine.
 <INLINE>
 <![CDATA[
 #!/bin/sh
-x=`ping -c1 google.com 2>&1 | grep -i unknown`
 COUNT=0
 while [ $COUNT -lt 10 ]; do
+        x=`ping -c1 google.com 2>&1 | grep -i unknown`
         if [ ! "$x" = "" ]; then
         echo "Waiting for Internet access"
         sleep 10
         fi
         let COUNT=COUNT+1
-        
+       
 done
 rm /tmp/tomsinetwait
 echo "Anetwait.plg is done, internet access detected!"
