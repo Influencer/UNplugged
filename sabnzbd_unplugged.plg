@@ -75,10 +75,24 @@ rm /tmp/sabnzbd-cleanup
 </INLINE>
 </FILE>
 
+<FILE Name="/tmp/checkconfig" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+test=`cat /boot/config/plugins/sabnzbd/sabnzbd.cfg | grep BETA`
+if [[ $test = "" ]]; then
+	echo "" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "BETA=\"no\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+fi
+rm /tmp/checkconfig
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.3
+2.4
 ]]>
 </INLINE>
 </FILE>
@@ -88,6 +102,7 @@ rm /tmp/sabnzbd-cleanup
 <![CDATA[
 # SABnzbd configuration:
 SERVICE="disable"
+BETA="no"
 INSTALLDIR="/usr/local/sabnzbd"
 DATADIR="/usr/local/sabnzbd"
 RUNAS="nobody"
@@ -241,12 +256,14 @@ write_config()
 {
 	echo "# SABnzbd configuration:" > /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
+	echo "BETA=\"$BETA\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/sabnzbd/sabnzbd.cfg
 	if [ -e $DATADIR/sabnzbd.ini ]; then sed -i 's!port = '"`cat "$DATADIR/sabnzbd.ini" | grep '^port' | awk 'NR==1' | cut -d' ' -f3`"'!port = '"$PORT"'!' "$DATADIR/sabnzbd.ini"; else sed -i 's!port = '"`cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3`"'!port = '"$PORT"'!' /boot/config/plugins/sabnzbd/sabnzbd.ini; fi
+
 }
 
 sabnzbd_change_settings()
@@ -267,6 +284,7 @@ sabnzbd_change_settings()
 	
 	PLG_STORAGESIZE="$5"
 	PLG_DATACHECK="$6"
+	BETA="$7"
 	
 	# create SABnzbd user if necessary
 	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
@@ -281,7 +299,7 @@ sabnzbd_enable()
 {
 	SERVICE=enable
 	    sabnzbd_stop
-		sabnzbd_change_settings $1 $2 $3 $4 $5 $6
+		sabnzbd_change_settings $1 $2 $3 $4 $5 $6 $7 $8
 		write_config
 		sabnzbd_start
 }
@@ -290,12 +308,12 @@ sabnzbd_disable()
 {
 	sabnzbd_stop
 	SERVICE=disable
-	sabnzbd_change_settings $1 $2 $3 $4 $5 $6
+	sabnzbd_change_settings $1 $2 $3 $4 $5 $6 $7 $8
 	write_config
 }
 
 sabnzbd_install()
-{	
+{ set -x
 	echo "Installing latest version of SABnzbd..."
 
 	if [ ! -e "$INSTALLDIR" ]; then 
@@ -310,14 +328,44 @@ sabnzbd_install()
 		cp /boot/config/plugins/sabnzbd/sabnzbd.ini $DATADIR
 	fi	
 	
-	version=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk NR==1))
+	if [[ $BETA = "" || $BETA = "no" ]]; then
+		stable=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+		echo "installing latest Version ($stable)"
 
-	cd /tmp
-	wget -q http://sourceforge.net/projects/sabnzbdplus/files/sabnzbdplus/${version}/SABnzbd-${version}-src.tar.gz
-	tar -xf /tmp/SABnzbd-${version}-src.tar.gz
-	cp -Rf /tmp/SABnzbd-${version}/* $INSTALLDIR
-	rm -Rf /tmp/SABnzbd-${version} /tmp/SABnzbd-${version}-src.tar.gz
-		
+		cd /tmp
+		wget -q http://sourceforge.net/projects/sabnzbdplus/files/sabnzbdplus/${stable}/SABnzbd-${stable}-src.tar.gz
+		tar -xf /tmp/SABnzbd-${stable}-src.tar.gz
+		cp -Rf /tmp/SABnzbd-${stable}/* $INSTALLDIR
+		chown -R $RUNAS:users "$INSTALLDIR"		
+		rm -Rf /tmp/SABnzbd-${stable} /tmp/SABnzbd-${stable}-src.tar.gz
+	elif [[ $BETA = "yes" ]]; then
+		if [[ `wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/Beta/{gsub(/\015/,"");print}'` = "" && `wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,"");print}'` = "" ]]; then
+			echo "No beta at this time, installing stable release!"
+			stable=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+			echo "installing latest Version ($stable)"
+
+			cd /tmp
+			wget -q http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus/sabnzbd-${stable}/SABnzbd-${stable}-src.tar.gz
+			tar -xf /tmp/SABnzbd-${stable}-src.tar.gz
+			cp -Rf /tmp/SABnzbd-${stable}/* $INSTALLDIR
+			chown -R $RUNAS:users "$INSTALLDIR"		
+			rm -Rf /tmp/SABnzbd-${stable} /tmp/SABnzbd-${stable}-src.tar.gz
+		else
+			beta=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
+			if [ $beta == "" ]; then
+				beta=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
+			fi
+			echo "installing latest Beta Version ($beta)";
+
+			cd /tmp 
+			wget http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus-beta/${beta}/SABnzbd-${beta}-src.tar.gz
+			tar -xf /tmp/SABnzbd-${beta}-src.tar.gz
+			cp -Rf /tmp/SABnzbd-${beta}/* $INSTALLDIR
+			chown -R $RUNAS:users "$INSTALLDIR"		
+			rm -Rf /tmp/SABnzbd-${beta} /tmp/SABnzbd-${beta}-src.tar.gz;
+		fi
+	fi
+	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3
 	echo "... OK"
@@ -398,6 +446,14 @@ sabnzbd_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/sabnzbd_unplugged.plg
 	fi
 }
+sabnzbd_newver()
+{
+	version=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
+	if [ $version == "" ]; then
+	version=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
+	fi
+	echo "$version"
+}
 
 # read our configuration
 source /boot/config/plugins/sabnzbd/sabnzbd.cfg
@@ -418,10 +474,10 @@ case "$1" in
 		sabnzbd_restart
 	;;
 	'enable')
-		sabnzbd_enable $2 $3 $4 $5 $6 $7
+		sabnzbd_enable $2 $3 $4 $5 $6 $7 $8
 	;;
 	'disable')
-		sabnzbd_disable $2 $3 $4 $5 $6 $7
+		sabnzbd_disable $2 $3 $4 $5 $6 $7 $8
 	;;
 	'install')
 		sabnzbd_install
@@ -443,6 +499,9 @@ case "$1" in
 	;;
 	'buttonstart')
 		sabnzbd_buttonstart
+	;;
+	'newversion')
+		sabnzbd_newver
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
@@ -507,12 +566,15 @@ if ($sabnzbd_installed=="yes")
 		$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
 		}
 	$sabnzbd_curversion = shell_exec ( "python $sabnzbd_cfg[INSTALLDIR]/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21" );
-	$sabnzbd_newversion = shell_exec ( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk NR==1" );
-
-			}
-else {
-	if (file_exists("/boot/config/plugins/sabnzbd/sabnzbd.ini"))
+	if ($sabnzbd_cfg[BETA]=="no" || $sabnzbd_cfg[BETA]=="") {
+		$sabnzbd_newversion = shell_exec ( "wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk NR==1" );
+	} else {
+	$sabnzbd_newversion = shell_exec ( "/etc/rc.d/rc.sabnzbd newversion" );
+	}
+} else {
+	if (file_exists("/boot/config/plugins/sabnzbd/sabnzbd.ini")) {
 		$sab_port = trim(shell_exec( "cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
+	}
 }
 ?>
 
@@ -621,6 +683,15 @@ else {
 			<tr>
 				<td>Install directory:</td>
 				<td><input type="text" name="arg4" maxlength="60" value="<?=$sabnzbd_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Install Beta:</td>
+				<td>
+					<select name="arg8" size="1">
+						<?=mk_option($sabnzbd_cfg['BETA'], "no", "No");?>
+						<?=mk_option($sabnzbd_cfg['BETA'], "yes", "Yes");?>
+					</select>
+				</td>
 			</tr>
 			<tr>
 				<td>Data directory:</td>
