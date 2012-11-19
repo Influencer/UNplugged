@@ -345,7 +345,7 @@ sabnzbd_install()
 			echo "installing latest Version ($stable)"
 
 			cd /tmp
-			wget -q http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus/sabnzbd-${stable}/SABnzbd-${stable}-src.tar.gz
+			wget -q http://sourceforge.net/projects/sabnzbdplus/files/sabnzbdplus/${stable}/SABnzbd-${stable}-src.tar.gz
 			tar -xf /tmp/SABnzbd-${stable}-src.tar.gz
 			cp -Rf /tmp/SABnzbd-${stable}/* $INSTALLDIR
 			chown -R $RUNAS:users "$INSTALLDIR"		
