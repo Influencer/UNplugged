@@ -727,7 +727,7 @@ if ($sabnzbd_installed=="yes")
 			<?if (($https=="1") && ($https_port != $sab_port) && ($https_port != "\"\"")):?>
 			<tr>
 			  <td>HTTPS Port:</td>
-			  <td><input type="text" name="arg8" maxlength="40" value="<?=$https_port;?>"></td>
+			  <td><input type="text" name="arg9" maxlength="40" value="<?=$https_port;?>"></td>
 			</tr>
 		    <?endif;?>	
 			<tr>
