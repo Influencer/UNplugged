@@ -75,6 +75,21 @@ rm /tmp/sabnzbd-cleanup
 </INLINE>
 </FILE>
 
+<FILE Name="/boot/config/plugins/sabnzbd/sabnzbd.cfg">
+<INLINE>
+<![CDATA[
+# SABnzbd configuration:
+SERVICE="disable"
+BETA="no"
+INSTALLDIR="/usr/local/sabnzbd"
+DATADIR="/usr/local/sabnzbd"
+RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+]]>
+</INLINE>
+</FILE>
+
 <FILE Name="/tmp/checkconfig" Run="/bin/bash">
 <INLINE>
 <![CDATA[
@@ -93,21 +108,6 @@ rm /tmp/checkconfig
 <INLINE>
 <![CDATA[
 2.4
-]]>
-</INLINE>
-</FILE>
-
-<FILE Name="/boot/config/plugins/sabnzbd/sabnzbd.cfg">
-<INLINE>
-<![CDATA[
-# SABnzbd configuration:
-SERVICE="disable"
-BETA="no"
-INSTALLDIR="/usr/local/sabnzbd"
-DATADIR="/usr/local/sabnzbd"
-RUNAS="nobody"
-PLG_STORAGESIZE="yes"
-PLG_DATACHECK="yes"
 ]]>
 </INLINE>
 </FILE>
