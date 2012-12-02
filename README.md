@@ -43,6 +43,8 @@ Right click and save link as;
 -  [Gamez_unplugged.plg] (https://github.com/Influencer/UNplugged/blob/master/gamez_unplugged.plg)
 -  [Transmission_unplugged.plg] (https://github.com/Influencer/UNplugged/blob/master/transmission_unplugged.plg)
 
+-  [Download ALL packages (zipped)] (https://github.com/Influencer/UNplugged/archive/master.zip)
+
 ###Special Thanks:
 
 To ALL that have donated. It is very appreciated! I removed individual names as the list would be getting very long,
