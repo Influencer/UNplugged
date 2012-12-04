@@ -213,7 +213,11 @@ couchpotato_update()
 {
 	couchpotato_stop
 	sleep 1
-	couchpotato_install
+	cd /tmp
+	git clone -b $BRANCH $INSTALLURL
+	cp -Rfu /tmp/couchpotato_v2/* $INSTALLDIR
+	rm -Rf /tmp/couchpotato_v2
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 1
 	couchpotato_start
 }
