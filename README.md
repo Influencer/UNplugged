@@ -40,6 +40,10 @@ Right click and save link as;
 -  [Darkstat-1.0_unplugged.plg](https://github.com/influencer/unplugged/raw/master/darkstat-1.0_unplugged.plg)
 -  [Mylar_unplugged.plg](https://github.com/influencer/unplugged/raw/master/mylar_unplugged.plg)
 -  [Maraschino_unplugged.plg](https://github.com/influencer/unplugged/raw/master/maraschino_unplugged.plg)
+-  [Gamez_unplugged.plg] (https://github.com/Influencer/UNplugged/raw/master/gamez_unplugged.plg)
+-  [Transmission_unplugged.plg] (https://github.com/Influencer/UNplugged/raw/master/transmission_unplugged.plg)
+
+-  [Download ALL packages (zipped)] (https://github.com/Influencer/UNplugged/archive/master.zip)
 
 ###Special Thanks:
 

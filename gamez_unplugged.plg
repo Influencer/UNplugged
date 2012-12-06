@@ -609,7 +609,7 @@ if ($gamez_installed=="yes")
 		<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez">
 		<table class="settings">
 			<tr>
-				<td>Enable HeadPhones:</td>
+				<td>Enable Gamez:</td>
 				<td>
 					<select name="arg1" size="1">
 						<?=mk_option($gamez_cfg['SERVICE'], "disable", "No");?>
