@@ -66,7 +66,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.3.1
+2.3.5
 ]]>
 </INLINE>
 </FILE>
@@ -296,7 +296,9 @@ couchpotato_disable()
 }
 
 couchpotato_install()
-{
+{ set -x
+source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
+
 	echo "Installing latest version of CouchPotato v2..."
 	
 	if [ ! -e "$INSTALLDIR" ]; then 
@@ -312,11 +314,15 @@ couchpotato_install()
 		rm ""$DATADIR"/cache/version"
 	fi	
 	
-	cd $INSTALLDIR
-	git clone -b $BRANCH $INSTALLURL $INSTALLDIR
-		
+	cd /tmp
+	git clone -b $BRANCH $INSTALLURL Couchpotato
+	cp -Rfu /tmp/Couchpotato/* $INSTALLDIR
+	cd /tmp/Couchpotato/
+	git rev-parse HEAD >> "$DATADIR/cache/version"
+	rm -Rf /tmp/Couchpotato
+	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
-	sleep 3
+	sleep 1
 	echo "... OK"
 	sleep 1
 }
@@ -396,10 +402,11 @@ couchpotato_downgradeplg()
 	fi
 }
 couchpotato_vercheck()
-{
-	cd $INSTALLDIR
-	curversion=$( git rev-parse HEAD )
+{ set -x
+	if [ -e $DATADIR/cache/version ]; then
+	curversion=$( cat $DATADIR/cache/version )
 	echo "$curversion"
+	fi
 }
 
 # read our configuration
