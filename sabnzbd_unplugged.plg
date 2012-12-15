@@ -107,7 +107,7 @@ rm /tmp/checkconfig
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.5
+2.5.1
 ]]>
 </INLINE>
 </FILE>
@@ -328,44 +328,22 @@ sabnzbd_install()
 		cp /boot/config/plugins/sabnzbd/sabnzbd.ini $DATADIR
 	fi	
 	
-	if [[ $BETA = "" || $BETA = "no" ]]; then
-		stable=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/0/{gsub(/\015/,"");print}'))
-		echo "installing latest Version ($stable)"
-
-		cd /tmp
-		wget -q http://sourceforge.net/projects/sabnzbdplus/files/sabnzbdplus/${stable}/SABnzbd-${stable}-src.tar.gz
-		tar -xf /tmp/SABnzbd-${stable}-src.tar.gz
-		cp -Rf /tmp/SABnzbd-${stable}/* $INSTALLDIR
-		chown -R $RUNAS:users "$INSTALLDIR"		
-		rm -Rf /tmp/SABnzbd-${stable} /tmp/SABnzbd-${stable}-src.tar.gz
-	elif [[ $BETA = "yes" ]]; then
-		if [[ `wget -q -O - http://sabnzbd.org/version/latest | awk '/Beta/{gsub(/\015/,"");print}'` = "" && `wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,"");print}'` = "" ]]; then
-			echo "No beta at this time, installing stable release!"
-			stable=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/0/{gsub(/\015/,"");print}'))
-			echo "installing latest Version ($stable)"
-
-			cd /tmp
-			wget -q http://sourceforge.net/projects/sabnzbdplus/files/sabnzbdplus/${stable}/SABnzbd-${stable}-src.tar.gz
-			tar -xf /tmp/SABnzbd-${stable}-src.tar.gz
-			cp -Rf /tmp/SABnzbd-${stable}/* $INSTALLDIR
-			chown -R $RUNAS:users "$INSTALLDIR"		
-			rm -Rf /tmp/SABnzbd-${stable} /tmp/SABnzbd-${stable}-src.tar.gz
-		else
-			beta=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
-			if [ $beta == "" ]; then
-				beta=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
-			fi
-			echo "installing latest Beta Version ($beta)";
-
-			cd /tmp 
-			wget http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus-beta/${beta}/SABnzbd-${beta}-src.tar.gz
-			tar -xf /tmp/SABnzbd-${beta}-src.tar.gz
-			cp -Rf /tmp/SABnzbd-${beta}/* $INSTALLDIR
-			chown -R $RUNAS:users "$INSTALLDIR"		
-			rm -Rf /tmp/SABnzbd-${beta} /tmp/SABnzbd-${beta}-src.tar.gz;
-		fi
+	version=`sabnzbd_newver`
+	echo "installing latest Version ($version)"
+	
+	if [[ $(echo $version | grep "Beta") != "" || $(echo $version | grep "RC") != "" ]]; then
+		beta="-beta"
+	else
+		beta=""
 	fi
 	
+	cd /tmp 
+	wget http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus${beta}/${version}/SABnzbd-${version}-src.tar.gz
+	tar -xf /tmp/SABnzbd-${version}-src.tar.gz
+	cp -Rf /tmp/SABnzbd-${version}/* $INSTALLDIR
+	chown -R $RUNAS:users "$INSTALLDIR"		
+	rm -Rf /tmp/SABnzbd-${version} /tmp/SABnzbd-${version}-src.tar.gz;
+
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 3
 	echo "... OK"
@@ -448,17 +426,24 @@ sabnzbd_downgradeplg()
 }
 sabnzbd_newver()
 {
+stable_version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/0/{gsub(/\015/,"");print}'))
 if [[ $BETA = "" || $BETA = "no" ]]; then
-	version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+	version=$stable_version
 elif [[ $BETA = "yes" ]]; then
-	if [[ `wget -q -O - http://sabnzbd.org/version/latest | awk '/Beta/{gsub(/\015/,"");print}'` = "" && `wget -q -O - http://sabnzbd.org/version/latest | awk '/RC/{gsub(/\015/,"");print}'` = "" ]]; then
-		version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+	beta_version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
+	rc_version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
+	if [[ $beta_version = "" && $rc_version = "" ]]; then
+		version=$stable_version #use stable version, if no beta or rc was found
 	else
-		version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
-		if [ $version == "" ]; then
-			version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
+		if [[ $beta_version != "" && $stable_version < $beta_version && $(echo $beta_version | cut -d'.' -f3 | cut -c-1) != $(echo $stable_version | cut -d'.' -f3) ]]; then
+			version=$beta_version
+		elif [[ $rc_version != "" && $stable_version < $rc_version && $(echo $rc_version | cut -d'.' -f3 | cut -c-1) != $(echo $stable_version | cut -d'.' -f3) ]]; then
+			version=$rc_version
+		else
+			version=$stable_version
 		fi
 	fi
+	
 fi
 echo $version
 }
@@ -574,11 +559,7 @@ if ($sabnzbd_installed=="yes")
 		$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
 		}
 	$sabnzbd_curversion = shell_exec ( "python $sabnzbd_cfg[INSTALLDIR]/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21" );
-	if ($sabnzbd_cfg[BETA]=="no" || $sabnzbd_cfg[BETA]=="") {
-		$sabnzbd_newversion = shell_exec ( "wget -q -O - http://sabnzbd.org/version/latest | awk NR==1" );
-	} else {
 	$sabnzbd_newversion = shell_exec ( "/etc/rc.d/rc.sabnzbd newversion" );
-	}
 } else {
 	if (file_exists("/boot/config/plugins/sabnzbd/sabnzbd.ini")) {
 		$sab_port = trim(shell_exec( "cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
