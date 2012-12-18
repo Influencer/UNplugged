@@ -270,10 +270,11 @@ headphones_install()
 	if [ -e ""$DATADIR"/version.txt" ]; then 
 		rm ""$DATADIR"/version.txt"
 	fi
-	
+
 	cd /tmp
-	git clone -b master https://github.com/rembo10/headphones/ $INSTALLDIR
-	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+	git clone -b master https://github.com/rembo10/headphones headphones
+	cp -Rfu /tmp/headphones/* $INSTALLDIR
+	rm -Rf /tmp/Couchpotato
 }
 
 headphones_storagesize() 
