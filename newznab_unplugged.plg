@@ -515,12 +515,14 @@ $newznab_check = trim(shell_exec ( "etc/rc.d/rc.newznab check" ));
 			</form>
 	</div>
 	</br>
+	<? if ($newznab_cfg['SVNUSER']!=""): ?>
 	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 		<form name="newznab_update" method="POST" action="/update.htm" target="progressFrame">
 				<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab newznabupdate">
 				<input type="submit" name="runCmd" value="Update Newznab">
 		</form>
 	</div>
+	<?endif;?>
 	<?else:?>
 	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
 			<form name="newznab_update" method="POST" action="/update.htm" target="progressFrame">
