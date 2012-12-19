@@ -37,6 +37,31 @@ rm /tmp/newznab-cleanup
 </INLINE>
 </FILE>
 
+<!-- Install SVN -->
+<FILE Name="/tmp/newznab_svn" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+	cd /boot/packages/
+	if [ ! -f /boot/packages/neon-0.29.5-i486-1.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/neon-0.29.5-i486-1.txz
+	fi
+	if [ ! -f /boot/packages/apr-util-1.4.1-i486-1_slack13.37.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/patches/packages/apr-util-1.4.1-i486-1_slack13.37.txz
+	fi
+	if [ ! -f /boot/packages/subversion-1.6.16-i486-1_slack13.1.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.1/patches/packages/subversion-1.6.16-i486-1_slack13.1.txz
+	fi
+	if [ ! -f /boot/packages/apr-1.4.5-i486-1_slack13.1.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.1/patches/packages/apr-1.4.5-i486-1_slack13.1.txz
+	fi
+	/sbin/installpkg /boot/packages/apr-1.4.5-i486-1_slack13.1.txz
+	/sbin/installpkg /boot/packages/neon-0.29.5-i486-1.txz
+	/sbin/installpkg /boot/packages/apr-util-1.4.1-i486-1_slack13.37.txz
+	/sbin/installpkg /boot/packages/subversion-1.6.16-i486-1_slack13.1.txz
+]]?
+</INLINE>
+</FILE>
+
 <FILE Name="/boot/config/plugins/newznab/plgver.txt">
 <INLINE>
 <![CDATA[
