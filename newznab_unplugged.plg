@@ -1,0 +1,623 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This Plugin installs Newznab for UnRaid.
+
+You MUST run the simplefeatures webserver plug-in as well as the mysql plug-in for this plug-in to work. I could have
+the dependencies myself but decided since there are already plug-ins for these to avoid confusion they should be used.
+-->
+
+<FILE Name="/boot/packages/newznab-0.2.3.zip">
+<URL>http://newznab.com/newznab-0.2.3.zip</URL>
+<MD5>4f1aeb21dfca77263489dd4587e3bff0</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/newznab/newznab.jpg">
+<URL>--no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/newznab.jpg</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/newznab-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+[ -d /usr/local/emhttp/plugins/newznab ] && rm -f -R /usr/local/emhttp/plugins/newznab
+[ -f /etc/rc.d/rc.newznab ] && rm -f /etc/rc.d/rc.newznab
+[ -f /boot/config/plugins/newznab/plgver.txt ] && rm -f /boot/config/plugins/newznab/plgver.txt
+rm /tmp/newznab-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/newznab/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/newznab/newznab.cfg">
+<INLINE>
+<![CDATA[
+# Newznab configuration:
+INSTALLAUTO="disable"
+SERVER_ROOT="/usr/local/newznab"
+PLG_STORAGESIZE="yes"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/checkconfig" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+if [ -f /boot/config/plugins/simpleFeatures/lighttpd.cfg ]; then
+	test=`cat /boot/config/plugins/simpleFeatures/lighttpd.cfg | grep admin\|install`
+	if [[ $test = "" ]]; then
+		echo "url.rewrite-once = (" >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "	\"^/.*\.(css|jpg|jpeg|gif|png|js|ico)\" => \"\$0\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/(admin|install).*\$\" => \"\$0\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/?(?:\?(.*))\$\" => \"index.php?page=\$1&\$2\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/?\$\" => \"index.php?page=\$1\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/([^/]+)/?(?:\?(.*))\$\" => \"index.php?page=\$1&id=\$2&\$3\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/([^/]+)/?\$\" => \"index.php?page=\$1&id=\$2\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/([^/]+)/([^/]+)/?\$\" => \"index.php?page=\$1&id=\$2&subpage=\$3\" )" >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+	fi
+fi
+rm /tmp/checkconfig
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.newznab" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+newznab_start()
+{  
+	# if directory doesn't exist or newznab is not found, install it
+	if [[ "$SERVER_ROOT" != "" &&  ! -e "$SERVER_ROOT/www/automated.config.php" ]]; then
+		newznab_install
+	fi
+  
+	echo "... OK"
+}
+
+write_config()
+{
+	echo "# Newznab configuration:" > /boot/config/plugins/newznab/newznab.cfg
+	echo "INSTALLAUTO=\"$INSTALLAUTO\"" >> /boot/config/plugins/newznab/newznab.cfg
+	echo "SERVER_ROOT=\"$SERVER_ROOT\"" >> /boot/config/plugins/newznab/newznab.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/newznab/newznab.cfg
+	echo "SVNUSER=\"$SVNUSER\"" >> /boot/config/plugins/newznab/newznab.cfg
+	echo "SVNPASS=\"$SVNPASS\"" >> /boot/config/plugins/newznab/newznab.cfg
+}
+
+newznab_change_settings()
+{
+	SERVER_ROOT="$1"	
+	PLG_STORAGESIZE="$2"
+	SVNUSER="$3"
+	SVNPASS="$4"
+}
+
+newznab_enable()
+{
+	INSTALLAUTO=enable
+  	newznab_change_settings $2 $3 $4 $5 $6 $7 $8 $9
+	write_config
+	sqlcheck=`newznab_sqlcheck`
+	servercheck=`newznab_servercheck`
+	if [[ "$sqlcheck" == "no" || "$servercheck" == "no" ]]; then
+		break
+	else
+		newznab_install
+	fi
+}
+
+newznab_disable()
+{
+	INSTALLAUTO=disable
+	newznab_change_settings $2 $3 $4 $5 $6 $7 $8 $9
+	write_config
+}
+
+newznab_install()
+{ set -x
+PATH=/usr/local/sbin:/usr/sbin:/sbin:./:/usr/local/bin:/usr/bin:/bin:/usr/kerberos/bin:/usr/kerberos/sbin
+mkdir -p /boot/debug/newznab/
+		typeset LOG="/boot/debug/newznab/${0##*/}.out"
+		mv $LOG ${LOG}.old >/dev/null 2>&1
+		[[ -t 1 ]] && echo "Writing to logfile '$LOG'."
+		exec > $LOG 2>&1
+		
+	if [ -f /boot/packages/newznab_backup.zip ]; then
+	NNZIP="/boot/packages/newznab_backup.zip"
+	fi
+	if [ -f /boot/packages/newznab_backup.tar* ]; then
+	NNTAR="/boot/packages/newznab_backup.tar*"
+	fi
+	
+	# if directory doesn't exist or newznab is not found, install it
+	if [[ "$SERVER_ROOT" != "" &&  ! -e "$SERVER_ROOT/www/automated.config.php" ]]; then
+	echo "Installing Newznab"
+	
+	newznab_fixconfig
+	
+	if [ ! -e "$SERVER_ROOT" ]; then 
+		mkdir -p $SERVER_ROOT
+    fi
+	chmod 777 $SERVER_ROOT
+	SVN=`svn --version`
+	if [[ $NNZIP == "" && $NNTAR == "" ]]; then
+		if [[ $SVNUSER != "" && $SVNPASS != "" ]]; then
+			if [[ $SVN == "" ]]; then
+				install_svn
+				sleep 5
+			fi
+			
+			cd /tmp
+			/usr/bin/svn checkout svn://svn.newznab.com/nn/branches/nnplus/ --username $SVNUSER --password $SVNPASS --non-interactive
+			shopt -s dotglob
+			mv nnplus/* $SERVER_ROOT
+			rm -Rf /tmp/nnplus
+		else
+			if [ ! -f /boot/packages/newznab-0.2.3.zip ]; then
+			wget -q http://newznab.com/newznab-0.2.3.zip -P /boot/packages/ 
+			fi
+			cd /tmp
+			unzip -d /tmp/ /boot/packages/newznab-0.2.3.zip
+			cp -Rfu /tmp/newznab*/* $SERVER_ROOT
+			rm -Rf /tmp/newznab*
+		fi
+	else
+		if [ $NNTAR != "" ]; then
+			tar -xf $NNTAR
+			cp -Rfu newznab_backup/* $SERVER_ROOT
+			rm -Rf newznab_backup
+		else
+			unzip $NNZIP
+			cp -Rfu newznab_backup/* $SERVER_ROOT
+			rm -Rf newznab_backup
+		fi
+	fi
+	
+	chown -R nobody:users "$SERVER_ROOT"
+	sleep 3
+	echo "... OK"
+	sleep 1
+	fi
+}
+
+install_svn()
+{
+	cd /boot/packages/
+	if [ ! -f /boot/packages/neon-0.29.5-i486-1.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/neon-0.29.5-i486-1.txz
+	fi
+	if [ ! -f /boot/packages/apr-util-1.4.1-i486-1_slack13.37.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/patches/packages/apr-util-1.4.1-i486-1_slack13.37.txz
+	fi
+	if [ ! -f /boot/packages/subversion-1.6.16-i486-1_slack13.1.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.1/patches/packages/subversion-1.6.16-i486-1_slack13.1.txz
+	fi
+	if [ ! -f /boot/packages/apr-1.4.5-i486-1_slack13.1.txz ]; then
+	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.1/patches/packages/apr-1.4.5-i486-1_slack13.1.txz
+	fi
+	/sbin/installpkg /boot/packages/apr-1.4.5-i486-1_slack13.1.txz
+	/sbin/installpkg /boot/packages/neon-0.29.5-i486-1.txz
+	/sbin/installpkg /boot/packages/apr-util-1.4.1-i486-1_slack13.37.txz
+	/sbin/installpkg /boot/packages/subversion-1.6.16-i486-1_slack13.1.txz
+}
+
+newznab_storagesize() 
+{
+	if [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
+newznab_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $SERVER_ROOT )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your Newznab Install is not persistent and WILL NOT survive a reboot. Please locate Server Install on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your Server Install is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;margin-right:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+newznab_updateplg()
+{
+	cd /boot/config/plugins
+	[ -f newznab_unplugged.plg.old ] && rm -f newznab_unplugged.plg.old
+	if [ -f newznab_unplugged.plg ]; then
+	mv newznab_unplugged.plg newznab_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/newznab_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/newznab_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/newznab_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/newznab_unplugged.plg
+	fi
+}
+
+newznab_sqlcheck()
+{
+if [ `find /boot/config/plugins/ -iname mysql*.plg` != "" ]; then
+	echo "yes"
+else
+	echo "no"
+fi
+}
+
+newznab_servercheck()
+{
+if [ `find /boot/config/plugins/ -name simpleFeatures.web.server*.plg` != "" ]; then
+	echo "yes"
+else
+	echo "no"
+fi
+}
+
+newznab_fixconfig()
+{
+if [ -f /boot/config/plugins/simpleFeatures/lighttpd.cfg ]; then
+	test=`cat /boot/config/plugins/simpleFeatures/lighttpd.cfg | grep admin\|install`
+	if [[ $test = "" ]]; then
+		echo "url.rewrite-once = (" >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "	\"^/.*\.(css|jpg|jpeg|gif|png|js|ico)\" => \"$0\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/(admin|install).*$\" => \"$0\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/?(?:\?(.*))$\" => \"index.php?page=$1&$2\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/?$\" => \"index.php?page=$1\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/([^/]+)/?(?:\?(.*))$\" => \"index.php?page=$1&id=$2&$3\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/([^/]+)/?$\" => \"index.php?page=$1&id=$2\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+		echo "  \"^/([^/\.]+)/([^/]+)/([^/]+)/?$\" => \"index.php?page=$1&id=$2&subpage=$3\" )" >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
+	fi
+fi
+}
+
+newznab_mysqldl()
+{
+cd /boot/config/plugins
+wget --no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/mysql5_20120805.plg
+if [ -f /boot/config/plugins/mysql5_20120805.plg ]; then
+/usr/local/sbin/installplg /boot/config/plugins/mysql5_20120805.plg
+fi
+}
+
+newznab_serverdl()
+{
+cd /boot/config/plugins/
+wget --no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/simpleFeatures.web.server-1.0.5-noarch-1.plg
+if [ -f /boot/config/plugins/simpleFeatures.web.server-1.0.5-noarch-1.plg ]; then
+/usr/local/sbin/installplg /boot/config/plugins/simpleFeatures.web.server-1.0.5-noarch-1.plg
+fi
+}
+
+newznab_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f newznab_unplugged.plg.old ]; then
+	rm -f /newznab_unplugged.plg
+	mv newznab_unplugged.plg.old newznab_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/newznab_unplugged.plg
+	fi
+}
+
+# read our configuration
+source /boot/config/plugins/newznab/newznab.cfg
+
+case "$1" in
+	'start')
+		newznab_start
+	;;
+	'enable')
+		newznab_enable $1 $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'disable')
+		newznab_disable $1 $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'install')
+		newznab_install
+	;;
+	'storagesize')
+		newznab_storagesize $2 $3
+	;;
+	'datacheck')
+		newznab_datacheck
+	;;
+	'updateplg')
+		newznab_updateplg
+	;;
+	'downloadserver')
+		newznab_serverdl
+	;;
+	'downloadmysql')
+		newznab_mysqldl
+	;;
+	'downgradeplg')
+		newznab_downgradeplg
+	;;
+	'sqlcheck')
+		newznab_sqlcheck
+	;;
+	'servercheck')
+		newznab_servercheck
+	;;
+	'fixconfig')
+		newznab_fixconfig
+	;;
+	*)
+		echo "usage $0 start|enable|disable|install|storagesize|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/newznab/newznab.page">
+<INLINE>
+<![CDATA[
+Menu="unplugged"
+Icon="newznab.jpg"
+Version="1.0"
+Author="Benjamin Waller; Influencer"
+Type="php"
+Title="Newznab"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/newznab/newznab.jpg">
+<LOCAL>/boot/config/plugins/newznab/newznab.jpg</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/newznab/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/newznab/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/newznab/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/newznab/newznab.php">
+<INLINE>
+<![CDATA[
+<?PHP
+error_reporting(-1);
+$newznab_cfg = parse_ini_file( "/boot/config/plugins/newznab/newznab.cfg" );
+$lighttpd_cfg = parse_ini_file( "/boot/config/plugins/simpleFeatures/simpleFeatures.cfg");
+$newznab_installed = file_exists( $newznab_cfg["SERVER_ROOT"] . "/www/automated.config.php" ) ? "yes" : "no";
+$newznab_configure = file_exists( $newznab_cfg["SERVER_ROOT"] . "/www/install/install.lock" ) ? "yes" : "no";
+$newznab_rollback = file_exists( "/boot/config/plugins/newznab_unplugged.plg.old" ) ? "yes" : "no";
+$newznab_mysql = trim(shell_exec ( "/etc/rc.d/rc.newznab sqlcheck" ));
+$newznab_webserver = trim(shell_exec ( "/etc/rc.d/rc.newznab servercheck" ));
+$newznab_check = trim(shell_exec ( "etc/rc.d/rc.newznab check" ));
+	if ($newznab_installed=="yes")
+{
+	if ($newznab_cfg[PLG_STORAGESIZE]=="yes")
+		$newznab_datasize = shell_exec ( "/etc/rc.d/rc.newznab storagesize $newznab_cfg[SERVER_ROOT]" );
+	if ($newznab_cfg[PLG_DATACHECK]=="yes")
+		$newznab_datacheck = shell_exec ( "/etc/rc.d/rc.newznab datacheck" );
+	$newznab_plgver = shell_exec ( "cat /boot/config/plugins/newznab/plgver.txt" );
+}
+?>
+
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/sickbeard/device_status.png'>
+			<?if ($newznab_installed=="yes"):?>	
+				<?if ($newznab_configure=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$lighttpd_cfg['lighttpd.port'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a>
+				<?else:?>
+					<a href="http://<?=$var['NAME'];?>:<?=$lighttpd_cfg['lighttpd.port'];?>/install" target="_blank"><span class="red"><b>NOT CONFIGURED</b></span></a>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>			
+	<? if ($newznab_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="newznab_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="newznab_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="newznab_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?>
+	<?if ($newznab_installed=="no"):?>
+		<?if ($newznab_mysql=="no"):?>
+			<span class="red">MYSQL is NOT installed. Please install the unRAID Plugin!</span>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="newznab-sqlinstall" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab downloadmysql">
+					<input type="submit" name="runCmd" value="Install Mysql Plugin">
+				</form>
+			</div>
+		<?endif;?>
+		</br>
+		<?if ($newznab_webserver=="no"):?>
+			<span class="red">Web server is NOT installed. Please install the simpleFeatures Web Server Plugin!</span>4
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="newznab-serverinstall" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab downloadserver">
+					<input type="submit" name="runCmd" value="Install Web Server Plugin">
+				</form>
+			</div>
+		<?endif;?>
+		<?if ($newznab_mysql=="yes" && $newznab_webserver=="yes"):?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="newznab_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+		<?endif;?>
+	<?else:?>
+		<center><hr size="3" width="50%" color="grey"></center>
+		<? if ($newznab_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$newznab_datasize?>
+		<? endif; ?>
+			<?=$newznab_datacheck?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$newznab_plgver;?></b></p>
+	<? endif; ?>
+</div>
+
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/newznab/new_config.png'></span>
+	</div>
+	<form name="newznab_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab">
+		<table class="settings">
+			<tr>
+			<tr>
+				<td>Install Automatically:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($newznab_cfg['INSTALLAUTO'], "disable", "No");?>
+						<?=mk_option($newznab_cfg['INSTALLAUTO'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Server Root: * Set in simpleFeatures web server plug-in!</td>
+				<td><input type="text" name="arg2" maxlength="60" value="<?=$newznab_cfg['SERVER_ROOT'];?>"></td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($newznab_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($newznab_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg3" value="<?=$newznab_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+		</table>
+	<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
+				<input type="button" value="NN-Plus Settings" style="margin-bottom:35px" onClick="if (this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display != '') { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = ''; this.innerText = ''; this.value = 'Hide NN-Plus Settings'; } else { this.parentNode.parentNode.getElementsByTagName('div')[1].getElementsByTagName('div')[0].style.display = 'none'; this.innerText = ''; this.value = 'Show NN-Plus Settings'; }">
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+		<div>
+			<div style="display: none;">
+				<br />
+				<table class="settings">
+					<tr>
+						<td style="width:auto">SVN Username:</td>
+						<td><input type="text" name="arg4" maxlength="40" value="<?=$newznab_cfg['SVNUSER'];?>"></td>
+					</tr>
+					<tr>
+						<td style="width:auto">SVN Password:</td>
+						<td><input type="text" name="arg5" maxlength="40" value="<?=$newznab_cfg['SVNPASS'];?>"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</form>
+   <br />
+</div>
+<script type="text/javascript">
+function checkSTORAGE(form)
+{
+	form.arg3.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+function checkDATADIR(form)
+{
+	if (form.use_pkg.checked == false )
+	{
+		form.arg4.value = "";
+		form.arg4.type = "hidden";
+	}
+	else
+	{
+		form.arg4.value = "<?=$newznab_cfg['PLUSPACKAGE'];?>";
+		form.arg4.type = "text";
+	}
+}
+checkDATADIR(document.newznab_settings);
+checkSTORAGE(document.newznab_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/newznab/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+source /boot/config/plugins/newznab/newznab.cfg
+if [ $INSTALLAUTO = enable ]; then
+/etc/rc.d/rc.newznab install
+fi
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/newznab">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
