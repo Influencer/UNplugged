@@ -66,7 +66,7 @@ rm /tmp/newznab-cleanup
 <FILE Name="/boot/config/plugins/newznab/plgver.txt">
 <INLINE>
 <![CDATA[
-1.2
+1.2.1
 ]]>
 </INLINE>
 </FILE>
