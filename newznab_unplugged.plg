@@ -54,18 +54,19 @@ rm /tmp/newznab-cleanup
 	if [ ! -f /boot/packages/apr-1.4.5-i486-1_slack13.1.txz ]; then
 	wget -q http://slackware.cs.utah.edu/pub/slackware/slackware-13.1/patches/packages/apr-1.4.5-i486-1_slack13.1.txz
 	fi
-	/sbin/installpkg /boot/packages/apr-1.4.5-i486-1_slack13.1.txz
-	/sbin/installpkg /boot/packages/neon-0.29.5-i486-1.txz
-	/sbin/installpkg /boot/packages/apr-util-1.4.1-i486-1_slack13.37.txz
-	/sbin/installpkg /boot/packages/subversion-1.6.16-i486-1_slack13.1.txz
-]]?
+	/sbin/upgradepkg --install-new /boot/packages/apr-1.4.5-i486-1_slack13.1.txz
+	/sbin/upgradepkg --install-new /boot/packages/neon-0.29.5-i486-1.txz
+	/sbin/upgradepkg --install-new /boot/packages/apr-util-1.4.1-i486-1_slack13.37.txz
+	/sbin/upgradepkg --install-new /boot/packages/subversion-1.6.16-i486-1_slack13.1.txz
+	rm /tmp/newznab_svn
+]]>
 </INLINE>
 </FILE>
 
 <FILE Name="/boot/config/plugins/newznab/plgver.txt">
 <INLINE>
 <![CDATA[
-1.1
+1.2
 ]]>
 </INLINE>
 </FILE>
@@ -356,6 +357,20 @@ if [ -f /boot/config/plugins/simpleFeatures.web.server-1.0.5-noarch-1.plg ]; the
 fi
 }
 
+newznab_update()
+{
+SVN=`svn --version`
+if [[ $SVNUSER != "" && $SVNPASS != "" ]]; then
+			if [[ $SVN == "" ]]; then
+				install_svn
+				sleep 5
+			fi
+
+			/usr/bin/svn update $SERVER_ROOT --username $SVNUSER --password $SVNPASS --non-interactive
+			sleep 2
+fi
+}
+
 newznab_downgradeplg()
 {
 	cd /boot/config/plugins
@@ -409,6 +424,9 @@ case "$1" in
 	;;
 	'fixconfig')
 		newznab_fixconfig
+	;;
+	'newznabupdate')
+		newznab_update
 	;;
 	*)
 		echo "usage $0 start|enable|disable|install|storagesize|datacheck|updateplg|downgradeplg"
@@ -495,6 +513,13 @@ $newznab_check = trim(shell_exec ( "etc/rc.d/rc.newznab check" ));
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab downgradeplg">
 					<input type="submit" name="runCmd" value="Downgrade PLG">
 			</form>
+	</div>
+	</br>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+		<form name="newznab_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.newznab newznabupdate">
+				<input type="submit" name="runCmd" value="Update Newznab">
+		</form>
 	</div>
 	<?else:?>
 	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
