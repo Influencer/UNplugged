@@ -12,8 +12,8 @@ the dependencies myself but decided since there are already plug-ins for these t
 <URL>http://newznab.com/newznab-0.2.3.zip</URL>
 <MD5>4f1aeb21dfca77263489dd4587e3bff0</MD5>
 </FILE>
-<FILE Name="/boot/config/plugins/newznab/newznab.jpg">
-<URL>--no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/newznab.jpg</URL>
+<FILE Name="/boot/config/plugins/newznab/newznab.png">
+<URL>--no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/newznab.png</URL>
 </FILE>
 <FILE Name="/boot/config/plugins/images/device_status.png">
 <URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
@@ -66,7 +66,7 @@ rm /tmp/newznab-cleanup
 <FILE Name="/boot/config/plugins/newznab/plgver.txt">
 <INLINE>
 <![CDATA[
-1.2.1
+1.2.3
 ]]>
 </INLINE>
 </FILE>
@@ -206,7 +206,7 @@ mkdir -p /boot/debug/newznab/
 			cd /tmp
 			/usr/bin/svn checkout svn://svn.newznab.com/nn/branches/nnplus/ --username $SVNUSER --password $SVNPASS --non-interactive
 			shopt -s dotglob
-			mv nnplus/* $SERVER_ROOT
+			mv -Rfu nnplus/* $SERVER_ROOT
 			rm -Rf /tmp/nnplus
 		else
 			if [ ! -f /boot/packages/newznab-0.2.3.zip ]; then
@@ -327,6 +327,7 @@ newznab_fixconfig()
 if [ -f /boot/config/plugins/simpleFeatures/lighttpd.cfg ]; then
 	test=`cat /boot/config/plugins/simpleFeatures/lighttpd.cfg | grep admin\|install`
 	if [[ $test = "" ]]; then
+		echo "#" >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
 		echo "url.rewrite-once = (" >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
 		echo "	\"^/.*\.(css|jpg|jpeg|gif|png|js|ico)\" => \"$0\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
 		echo "  \"^/(admin|install).*$\" => \"$0\"," >> /boot/config/plugins/simpleFeatures/lighttpd.cfg
@@ -361,13 +362,22 @@ newznab_update()
 {
 SVN=`svn --version`
 if [[ $SVNUSER != "" && $SVNPASS != "" ]]; then
+			
 			if [[ $SVN == "" ]]; then
 				install_svn
 				sleep 5
 			fi
-
-			/usr/bin/svn update $SERVER_ROOT --username $SVNUSER --password $SVNPASS --non-interactive
-			sleep 2
+			
+			if [ -d $SERVER_ROOT/.svn ]; then
+				/usr/bin/svn update $SERVER_ROOT --username $SVNUSER --password $SVNPASS --non-interactive
+				sleep 2
+			else
+				cd /tmp
+				/usr/bin/svn checkout svn://svn.newznab.com/nn/branches/nnplus/ --username $SVNUSER --password $SVNPASS --non-interactive
+				shopt -s dotglob
+				cp -Rfu nnplus/* $SERVER_ROOT
+				rm -Rf /tmp/nnplus
+			fi
 fi
 }
 
@@ -439,7 +449,7 @@ esac
 <INLINE>
 <![CDATA[
 Menu="unplugged"
-Icon="newznab.jpg"
+Icon="newznab.png"
 Version="1.0"
 Author="Benjamin Waller; Influencer"
 Type="php"
@@ -448,8 +458,8 @@ Title="Newznab"
 </INLINE>
 </FILE>
 
-<FILE Name="/usr/local/emhttp/plugins/newznab/newznab.jpg">
-<LOCAL>/boot/config/plugins/newznab/newznab.jpg</LOCAL>
+<FILE Name="/usr/local/emhttp/plugins/newznab/newznab.png">
+<LOCAL>/boot/config/plugins/newznab/newznab.png</LOCAL>
 </FILE>
 
 <FILE Name="/usr/local/emhttp/plugins/newznab/device_status.png">

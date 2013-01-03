@@ -66,7 +66,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.3.5
+2.3.6
 ]]>
 </INLINE>
 </FILE>
@@ -209,18 +209,18 @@ echo "Enabling couchpotato"
 	fi
 }
 
-couchpotato_update()
-{
-	couchpotato_stop
-	sleep 1
-	cd /tmp
-	git clone -b $BRANCH $INSTALLURL
-	cp -Rfu /tmp/couchpotato_v2/* $INSTALLDIR
-	rm -Rf /tmp/couchpotato_v2
-	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
-	sleep 1
-	couchpotato_start
-}
+#couchpotato_update()
+#{
+#	couchpotato_stop
+#	sleep 1
+#	cd /tmp
+#	git clone -b $BRANCH $INSTALLURL
+#	cp -Rfu /tmp/couchpotato_v2/* $INSTALLDIR
+#	rm -Rf /tmp/couchpotato_v2
+#	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+#	sleep 1
+#	couchpotato_start
+#}
 
 write_config()
 {
@@ -296,7 +296,7 @@ couchpotato_disable()
 }
 
 couchpotato_install()
-{ set -x
+{ 
 source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 
 	echo "Installing latest version of CouchPotato v2..."
@@ -317,8 +317,6 @@ source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 	cd /tmp
 	git clone -b $BRANCH $INSTALLURL Couchpotato
 	cp -Rfu /tmp/Couchpotato/* $INSTALLDIR
-	cd /tmp/Couchpotato/
-	git rev-parse HEAD >> "$DATADIR/cache/version"
 	rm -Rf /tmp/Couchpotato
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
@@ -395,7 +393,7 @@ couchpotato_downgradeplg()
 {
 	cd /boot/config/plugins
 	if [ -f couchpotato_v2_unplugged.plg.old ]; then
-	rm -f /couchpotato_v2_unplugged.plg
+	rm -f couchpotato_v2_unplugged.plg
 	mv couchpotato_v2_unplugged.plg.old couchpotato_v2_unplugged.plg
 	echo "downgrading plugin"
 	/usr/local/sbin/installplg /boot/config/plugins/couchpotato_v2_unplugged.plg
@@ -435,9 +433,9 @@ case "$1" in
 	'install')
 		couchpotato_install
 	;;
-	'update')
-		couchpotato_update
-	;;
+#	'update')
+#		couchpotato_update
+#	;;
 	'storagesize')
 		couchpotato_storagesize $2 $3
 	;;
@@ -453,9 +451,9 @@ case "$1" in
 	'buttonstart')
 		couchpotato_buttonstart
 	;;
-	'vercheck')
-		couchpotato_vercheck
-	;;
+#	'vercheck')
+#		couchpotato_vercheck
+#	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
 esac
@@ -510,11 +508,6 @@ if ($couchpotato_installed=="yes")
 		$couchpotato_datacheck = shell_exec ( "/etc/rc.d/rc.couchpotato_v2 datacheck" );
 	$couchpotato_plgver = shell_exec ( "cat /boot/config/plugins/couchpotato_v2/plgver.txt" );
 
-	if (file_exists("$couchpotato_cfg[INSTALLDIR]" . "/CouchPotato.py"))
-		$couchpotato_curversion = shell_exec( "/etc/rc.d/rc.couchpotato_v2 vercheck" );
-	else
-		$couchpotato_curversion = "couldn't determine the CouchPotato v2 version";
-	$couchpotato_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate $couchpotato_cfg[INSTALLURL]/commits/$couchpotato_cfg[BRANCH].atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );
 }
 // get CouchPotato v2 port
 if (file_exists($couchpotato_configfile))
@@ -526,7 +519,7 @@ if (file_exists($couchpotato_configfile))
 		<span class="left">Status:&#32;<img src='/plugins/couchpotato_v2/device_status.png'> 
 			<?if ($couchpotato_installed=="yes"):?>	
 				<?if ($couchpotato_running=="yes"):?>
-					<a href="http://<?=$var['NAME'];?>:<?=$couch_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$couchpotato_curversion?></b></span>
+					<a href="http://<?=$var['NAME'];?>:<?=$couch_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a>
 				<?else:?>
 					<span class="red"><b>STOPPED</b></span>
 				<?endif;?>
@@ -596,16 +589,6 @@ if (file_exists($couchpotato_configfile))
 			<?=$couchpotato_datacheck?>
 		<? endif; ?>
 		<p style="margin-left:10px;"><b>Plug-in Version: <?=$couchpotato_plgver;?></b></p>
-		<? if (strcmp($couchpotato_curversion, $couchpotato_newversion)!=0 && $couchpotato_curversion!="couldn't determine the CouchPotato v2 version"): ?>
-			<center>
-				<form name="couchpotato_settings" method="POST" action="/update.htm" target="progressFrame">
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.couchpotato_v2 update">
-					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$couchpotato_newversion;?></b></p>
-					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
-					<input type="submit" name="runCmd" value="Update">
-				</form>	 
-			</center>
-		<? endif; ?>
 	<? endif; ?>
 </div>
 <div style="width: 49%; float:right">
