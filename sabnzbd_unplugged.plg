@@ -195,9 +195,8 @@ sabnzbd_stop()
 	
 	if [ -d $DATADIR ] && [ -f $DATADIR/sabnzbd.ini ]; then
 		APIKEY=`grep -w api_key $DATADIR/sabnzbd.ini | cut -d " " -f3`
-		IP=$(ifconfig  | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | grep -v '^5' | awk '{ print $1}')
-        # this WILL fail under certain case.  eg. https enabled & https port set or using std http port.  url should be https://, but we dont care as secondary pid kill will kick in
-		RES=$(wget -qO - "http://$IP:$PORT/sabnzbd/api?mode=shutdown&apikey=$APIKEY")
+		sabnzbd_portchk
+		RES=$(wget -qO - "$URLTYPE://$IP:$PORT/sabnzbd/api?mode=shutdown&apikey=$APIKEY")
 		if [[ $RES != "ok" ]]; then
 		  for f in /var/run/sabnzbd/sabnzbd-*.pid; do # secondary process kill. iterate thru any pid files found in /var/run/sabnzbd
             if [ -f "$f" ]; then kill -9 $(cat $f); fi
@@ -438,6 +437,32 @@ fi
 echo $version
 }
 
+sabnzbd_portchk()
+{
+  # does a probe for a list of what services are up
+  # possible permutations:
+  # (http://ip:port)
+  # (http://ip:port & https://ip:https_port) OR (https://ip:port)
+  
+  if [ -d $DATADIR ] && [ -f $DATADIR/sabnzbd.ini ]; then
+    IP=$(ifconfig  | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | grep -v '^5' | awk '{ print $1}')
+    RES1=$(wget -qO - "http://$IP:$PORT/sabnzbd/api?mode=version")
+    RES2=$(wget --no-check-certificate -qO - "https://$IP:$PORT/sabnzbd/api?mode=version")
+    RES3=$(wget --no-check-certificate -qO - "https://$IP:$HTTPS_PORT/sabnzbd/api?mode=version")
+    if [ ! -z $RES1 ]; then
+      URLTYPE="http"
+    elif [ ! -z $RES2 ]; then
+      URLTYPE="https"
+    elif [ ! -z $RES3 ]; then
+      URLTYPE= "https"
+      $PORT=$HTTPS_PORT
+    fi	
+    [[ $RES1 ]] && RES1="HTTP Port: $PORT"
+    [[ $RES2 ]] && RES2="HTTPS Port: $PORT"
+    [[ $RES3 ]] && RES3=" & HTTPS Port: $HTTPS_PORT"
+  fi
+}
+
 sabnzbd_status()
 {
   case "$1" in
@@ -454,20 +479,8 @@ sabnzbd_status()
       fi
 	;;
 	'portinfo')
-	  # does a probe for a list of what services are up
-	  # http on http://ip:http_port
-	  # https on https://ip:port
-      # https on https://ip:https_port
-	  if [ -d $DATADIR ] && [ -f $DATADIR/sabnzbd.ini ]; then
-		IP=$(ifconfig  | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | grep -v '^5' | awk '{ print $1}')
-		RES1=$(wget -qO - "http://$IP:$PORT/sabnzbd/api?mode=version")
-	    RES2=$(wget --no-check-certificate -qO - "https://$IP:$PORT/sabnzbd/api?mode=version")
-	    RES3=$(wget --no-check-certificate -qO - "https://$IP:$HTTPS_PORT/sabnzbd/api?mode=version")
-		[[ $RES1 ]] && RES1="HTTP Port: $PORT"
-		[[ $RES2 ]] && RES2="HTTPS Port: $PORT"
-		[[ $RES3 ]] && RES3=" & HTTPS Port: $HTTPS_PORT"
-        echo "<p style="margin-left:10px\;">SABnzbd is running on $RES1$RES2$RES3</p>"
-      fi
+      sabnzbd_portchk
+	  echo "<p style="margin-left:10px\;">SABnzbd is running on $RES1$RES2$RES3</p>"
 	;;
 	*)
 	  echo "call this function with params: chkrunning|portinfo"
