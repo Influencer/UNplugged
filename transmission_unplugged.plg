@@ -35,7 +35,7 @@ I have probably missed some credits here, not intentional but I do not have a pe
 </FILE>
 
 <FILE Name="/boot/packages/transmission-2.76-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>https://dl.dropbox.com/u/1574928/Unraid%20Plugins/transmission-2.76-i686-1PTr.txz</URL>
+<URL>--no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/transmission-2.76-i686-1PTr.txz</URL>
 </FILE>
 
 <FILE Name="/boot/config/plugins/transmission/transmission.png">
