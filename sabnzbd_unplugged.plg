@@ -30,9 +30,9 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
 <MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
 </FILE>
-<FILE Name="/boot/packages/unrar-4.2.4-i686-1cf.txz" Run="upgradepkg --install-new">
-<URL>http://www.slackers.it/repository/unrar/pkg/unrar-4.2.4-i686-1cf.txz</URL>
-<MD5>9c65ce47296c8b071aa8188757ea9e5c</MD5>
+<FILE Name="/boot/packages/unrar-4.0.7-i486-2alien.tgz" Run="upgradepkg --install-new">
+<URL>http://connie.slackware.com/~alien/slackbuilds/unrar/pkg/13.37/unrar-4.0.7-i486-2alien.tgz</URL>
+<MD5>33c9f9ad19261d5ebdd1ec8d357e8037</MD5>
 </FILE>
 <FILE Name="/boot/packages/infozip-6.0-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/a/infozip-6.0-i486-1.txz</URL>
@@ -107,7 +107,7 @@ rm /tmp/checkconfig
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.5.2
+2.5.1
 ]]>
 </INLINE>
 </FILE>
@@ -426,12 +426,12 @@ sabnzbd_downgradeplg()
 }
 sabnzbd_newver()
 {
-stable_version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/0/{gsub(/\015/,"");print}'))
+stable_version=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/0/{gsub(/\015/,"");print}'))
 if [[ $BETA = "" || $BETA = "no" ]]; then
 	version=$stable_version
 elif [[ $BETA = "yes" ]]; then
-	beta_version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
-	rc_version=($(wget -q -O - http://sabnzbd.org/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
+	beta_version=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/Beta/{gsub(/\015/,"");print}'))
+	rc_version=($(wget -q -O - http://sabnzbdplus.sourceforge.net/version/latest | awk '/RC/{gsub(/\015/,"");print}'))
 	if [[ $beta_version = "" && $rc_version = "" ]]; then
 		version=$stable_version #use stable version, if no beta or rc was found
 	else
