@@ -246,8 +246,8 @@ gamez_update()
 	fi
 	cd /tmp
 	git clone -b TheGamedb https://github.com/avjui/Gamez/
-	cp -Rfu /tmp/gamez/* $INSTALLDIR
-	rm -Rf /tmp/gamez
+	cp -Rfu /tmp/Gamez/* $INSTALLDIR
+	rm -Rf /tmp/Gamez
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 1
 	gamez_start
