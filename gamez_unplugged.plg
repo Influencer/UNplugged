@@ -68,7 +68,7 @@ rm /tmp/gamez-cleanup
 <FILE Name="/boot/config/plugins/gamez/plgver.txt">
 <INLINE>
 <![CDATA[
-1.1
+1.2
 ]]>
 </INLINE>
 </FILE>
@@ -236,23 +236,6 @@ echo "Enabling Gamez"
 	fi
 }
 
-gamez_update()
-{
-	gamez_stop
-	sleep 1
-    echo "installing latest Version of gamez"	
-	if [ -e ""$DATADIR"/version.txt" ]; then 
-		rm ""$DATADIR"/version.txt"
-	fi
-	cd /tmp
-	git clone -b TheGamedb https://github.com/avjui/Gamez/
-	cp -Rfu /tmp/Gamez/* $INSTALLDIR
-	rm -Rf /tmp/Gamez
-	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
-	sleep 1
-	gamez_start
-}
-
 write_config()
 {
 	echo "# gamez configuration" > /boot/config/plugins/gamez/gamez.cfg
@@ -405,12 +388,7 @@ gamez_downgradeplg()
 	/usr/local/sbin/installplg /boot/config/plugins/gamez_unplugged.plg
 	fi
 }
-gamez_vercheck()
-{
-	cd $INSTALLDIR
-	curversion=$( git rev-parse HEAD )
-	echo "$curversion"
-}
+
 
 # read our configuration
 source /boot/config/plugins/gamez/gamez.cfg
@@ -451,9 +429,6 @@ case "$1" in
 	;;
 	'buttonstart')
 		gamez_buttonstart
-	;;
-	'vercheck')
-		gamez_vercheck
 	;;
 	*)
 		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
@@ -505,11 +480,6 @@ if ($gamez_installed=="yes")
 		$gamez_datacheck = shell_exec ( "/etc/rc.d/rc.gamez datacheck" );
 	$gamez_plgver = shell_exec ( "cat /boot/config/plugins/gamez/plgver.txt" );
 	$gamez_running = file_exists( "/var/run/gamez/gamez-".$gamez_cfg['PORT'].".pid") ? "yes" : "no";
-	if (file_exists($gamez_cfg["INSTALLDIR"] . "/Gamez.py"))
-		$gamez_curversion = shell_exec( "/etc/rc.d/rc.gamez vercheck" );
-	else
-		$gamez_curversion = "Update at the bottom of the Gamez web page first"; 
-	$gamez_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/avjui/Gamez/commits/TheGamedb.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
 	$gamez_installdirsize = trim(shell_exec( "if [ -e $gamez_cfg[INSTALLDIR] ]; then du -sh $gamez_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
 	$gamez_datadirsize = trim(shell_exec( "if [ -e $gamez_cfg[DATADIR] ]; then du -sh $gamez_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
 }
@@ -519,7 +489,7 @@ if ($gamez_installed=="yes")
 		<span class="left">Status:&#32;<img src='/plugins/gamez/device_status.png'>
 			<?if ($gamez_installed=="yes"):?>	
 				<?if ($gamez_running=="yes"):?>
-					<a href="http://<?=$var['NAME'];?>:<?=$gamez_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$gamez_curversion?></b></span>
+					<a href="http://<?=$var['NAME'];?>:<?=$gamez_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a>
 				<?else:?>
 					<span class="red"><b>STOPPED</b></span>
 				<?endif;?>
@@ -581,7 +551,7 @@ if ($gamez_installed=="yes")
 	<?endif;?><br/>
 	<? if ($gamez_installed=="yes"): ?>	
 		<center><hr size="3" width="50%" color="grey"></center>
-		<p style="margin-left:10px;">Gamez is installed with version: <?=$gamez_curversion;?></p>
+		<p style="margin-left:10px;">Gamez is installed</p>
 		<? if ($gamez_cfg[PLG_STORAGESIZE]=="yes"): ?>
 			<?=$gamez_datasize?>
 		<? endif; ?>
@@ -589,16 +559,6 @@ if ($gamez_installed=="yes")
 			<?=$gamez_datacheck?>
 		<? endif; ?>
 		<p style="margin-left:10px;"><b>Plug-in Version: <?=$gamez_plgver;?></b></p>
-		<? if (strcmp($gamez_curversion, $gamez_newversion)!=0 && $gamez_curversion!="couldn't determine the Gamez version"): ?>
-			<center>
-				<form name="gamez_settings" method="POST" action="/update.htm" target="progressFrame">
-					<input type="hidden" name="cmd" value="/etc/rc.d/rc.gamez update">
-					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$gamez_newversion;?></b></p>
-					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
-					<input type="submit" name="runCmd" value="Update">
-				</form>	 
-			</center>
-		<? endif; ?>
 	<? endif; ?>
 </div>
 <div style="width: 49%; float:right">
