@@ -68,7 +68,7 @@ rm /tmp/gamez-cleanup
 <FILE Name="/boot/config/plugins/gamez/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0
+1.1
 ]]>
 </INLINE>
 </FILE>
