@@ -48,7 +48,7 @@ I have...
 </FILE>
 
 <FILE Name="/boot/config/plugins/headphones/headphones.png">
-<URL>http://img513.imageshack.us/img513/3190/headphoneslogo.png</URL>
+<URL>--no-check-certificate https://raw.github.com/rembo10/headphones/master/data/images/headphoneslogo.png</URL>
 </FILE>
 
 <!-- clean up previous install -->
