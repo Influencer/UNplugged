@@ -34,8 +34,8 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <MD5>330d34e3b0d896cd1033fe3eddb3b259</MD5>
 </FILE>
 
-<FILE Name="/boot/packages/transmission-2.76-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dropbox.com/u/1574928/Unraid%20Plugins/transmission-2.76-i686-1PTr.txz</URL>
+<FILE Name="/boot/packages/transmission-2.77-i686-1PTr.1.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dropboxusercontent.com/u/49442039/transmission-2.77-i686-1PTr.1.txz</URL>
 </FILE>
 
 <FILE Name="/boot/config/plugins/transmission/transmission.png">
