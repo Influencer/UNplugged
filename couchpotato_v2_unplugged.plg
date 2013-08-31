@@ -29,9 +29,9 @@ I have...
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/ap/sqlite-3.7.13-i486-1.txz</URL>
 <MD5>01dfd7fcfac2943227fc3f981e69c05d</MD5>
 </FILE>
-<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
-<MD5>e32449e0588ef54df8524827028972e8</MD5>
+<FILE Name="/boot/packages/curl-7.27.0-i486-2.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/n/curl-7.27.0-i486-2.txz</URL>
+<MD5>0b3b3864205793754a42b237b1f10550</MD5>
 </FILE>
 <FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
