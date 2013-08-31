@@ -17,9 +17,9 @@ I have...
  * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
-<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
-<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+<FILE Name="/boot/packages/python-2.7.3-i486-2.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/d/python-2.7.3-i486-2.txz</URL>
+<MD5>14740c268031f7fe09f2f8d533c6da8f</MD5>
 </FILE>
 <FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
