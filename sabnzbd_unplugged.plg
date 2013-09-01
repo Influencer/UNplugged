@@ -15,9 +15,9 @@ I have probably missed some credits here, not intentional but I do not have a pe
 -->
 
 
-<FILE Name="/boot/packages/python-2.7.3-i486-2.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/d/python-2.7.3-i486-2.txz</URL>
-<MD5>14740c268031f7fe09f2f8d533c6da8f</MD5>
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
 <FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
 <URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
@@ -27,9 +27,9 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <URL>http://connie.slackware.com/~alien/slackbuilds/python-yenc/pkg/13.37/python-yenc-0.3-i486-1alien.tgz</URL>
 <MD5>904c93692352cc2ddb8a3f769408bfad</MD5>
 </FILE>
-<FILE Name="/boot/packages/sqlite-3.7.13-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/ap/sqlite-3.7.13-i486-1.txz</URL>
-<MD5>01dfd7fcfac2943227fc3f981e69c05d</MD5>
+<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
+<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
 </FILE>
 <FILE Name="/boot/packages/unrar-4.2.4-i486-1alien.tgz" Run="upgradepkg --install-new">
 <URL>http://www.slackware.com/~alien/slackbuilds/unrar/pkg/13.37/unrar-4.2.4-i486-1alien.tgz</URL>
