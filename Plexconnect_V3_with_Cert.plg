@@ -317,26 +317,26 @@ PlexConnect_datacheck()
 PlexConnect_updateplg()
 {
 	cd /boot/config/plugins
-	if [ -f PlexConnect_unplugged.plg ]; then
-	[ -f PlexConnect_unplugged.plg.old ] && rm -f PlexConnect_unplugged.plg.old
-	mv PlexConnect_unplugged.plg PlexConnect_unplugged.plg.old
+	if [ -f Plexconnect_V3_with_Cert.plg ]; then
+	[ -f Plexconnect_V3_with_Cert.plg.old ] && rm -f Plexconnect_V3_with_Cert.plg.old
+	mv Plexconnect_V3_with_Cert.plg Plexconnect_V3_with_Cert.plg.old
 	echo "Updating plugin"
-	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/PlexConnect_unplugged.plg
-	/usr/local/sbin/installplg /boot/config/plugins/PlexConnect_unplugged.plg
+	wget -q --no-check-certificate https://raw.github.com/sacretagent/UNplugged/master/Plexconnect_V3_with_Cert.plg
+	/usr/local/sbin/installplg /boot/config/plugins/Plexconnect_V3_with_Cert.plg
 	else
 	echo "Updating plugin"
-	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/PlexConnect_unplugged.plg
-	/usr/local/sbin/installplg /boot/config/plugins/PlexConnect_unplugged.plg
+	wget -q --no-check-certificate https://raw.github.com/sacretagent/UNplugged/master/Plexconnect_V3_with_Cert.plg
+	/usr/local/sbin/installplg /boot/config/plugins/Plexconnect_V3_with_Cert.plg
 	fi
 }
 PlexConnect_downgradeplg()
 {
 	cd /boot/config/plugins
-	if [ -f PlexConnect_unplugged.plg.old ]; then
-	rm -f /PlexConnect_unplugged.plg
-	mv PlexConnect_unplugged.plg.old PlexConnect_unplugged.plg
+	if [ -f Plexconnect_V3_with_Cert.plg.old ]; then
+	rm -f /Plexconnect_V3_with_Cert.plg
+	mv Plexconnect_V3_with_Cert.plg.old Plexconnect_V3_with_Cert.plg
 	echo "downgrading plugin"
-	/usr/local/sbin/installplg /boot/config/plugins/PlexConnect_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/Plexconnect_V3_with_Cert.plg
 	fi
 }
 PlexConnect_vercheck()
@@ -404,7 +404,7 @@ Icon="plexconnect.png"
 Version="0.2"
 Author="Influence; Wojciech Walaszek"
 Type="php"
-Title="PlexConnect"
+Title="Plexconnect_V3_with_Cert.plg"
 ]]>
 </INLINE>
 </FILE>
@@ -430,7 +430,7 @@ Title="PlexConnect"
 <?PHP
 $PlexConnect_cfg = parse_ini_file( "/boot/config/plugins/PlexConnect/PlexConnect.cfg");
 $PlexConnect_installed = file_exists( $PlexConnect_cfg["INSTALLDIR"] . "/PlexConnect.py" ) ? "yes" : "no";
-$PlexConnect_rollback = file_exists( "/boot/config/plugins/PlexConnect_unplugged.plg.old" ) ? "yes" : "no";
+$PlexConnect_rollback = file_exists( "/boot/config/plugins/Plexconnect_V3_with_Cert.plg.old" ) ? "yes" : "no";
 if ($PlexConnect_installed=="yes")
 {
 	if ($PlexConnect_cfg[PLG_STORAGESIZE]=="yes")
