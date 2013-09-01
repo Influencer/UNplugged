@@ -1,0 +1,704 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This Plugin installs and controls PlexConnect for UnRaid.
+All dependencies are installed as needed and everything is controlable from the webgui
+
+Credits:
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+
+WW: Some config page formatting
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
+
+-->
+
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
+</FILE>
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<FILE Name="/boot/config/plugins/plexconnect/plexconnect.png">
+<URL>--no-check-certificate https://dl.dropboxusercontent.com/u/29067424/plexconnect.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/PlexConnect-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+rm -f /etc/rc.d/rc.PlexConnect
+rm -f -R /usr/local/emhttp/plugins/PlexConnect
+[ -f /boot/config/plugins/PlexConnect/plgver.txt ] && rm -f /boot/config/plugins/PlexConnect/plgver.txt
+rm /tmp/PlexConnect-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/PlexConnect/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/PlexConnect/PlexConnect.cfg">
+<INLINE>
+<![CDATA[
+# PlexConnect configuration
+SERVICE="disable"
+INSTALLDIR="/usr/local/PlexConnect"
+DATADIR="/usr/local/PlexConnect"
+PORT="80"
+RUNAS="root"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.PlexConnect" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# Start/stop/restart/enable/disable PlexConnect.
+
+PlexConnect_start()
+{
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+	fi
+
+	# no-op if already running
+	if [ -r /var/run/PlexConnect/PlexConnect-$PORT.pid ]; then
+		return
+	fi
+	
+	# if directory doesn't exist or PlexConnect is not found, install it
+	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/PlexConnect.py" ]]; then
+		PlexConnect_install
+	fi
+	
+	if [ ! -d $DATADIR ]; then
+		mkdir $DATADIR
+        chown -R nobody:users $DATADIR
+	    chmod -R 777 $DATADIR
+	fi
+
+	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/PlexConnect.py -d -o $DATADIR/plexconnect --nolaunch --pidfile /var/run/PlexConnect/PlexConnect-$PORT.pid"
+	echo -n "Starting PlexConnect:  $CMDLINE"
+	$CMDLINE
+	echo
+  
+	while [ ! -e /var/run/PlexConnect/PlexConnect-$PORT.pid  ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+PlexConnect_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/PlexConnect/PlexConnect-$PORT.pid ]; then
+		return
+	fi
+	
+	echo "Stopping PlexConnect..."
+	sleep 1
+	kill $(cat /var/run/PlexConnect/PlexConnect-$PORT.pid)
+	sleep 3
+  
+	if [ -f /var/run/PlexConnect/PlexConnect-$PORT.pid ]; then
+		rm /var/run/PlexConnect/PlexConnect-$PORT.pid
+	fi
+  
+	while [ -e /var/run/PlexConnect/PlexConnect-$PORT.pid  ]; do
+		sleep 1
+	done
+	echo "... OK"
+	sleep 1
+}
+
+PlexConnect_restart()
+{
+	PlexConnect_stop
+	sleep 1
+	PlexConnect_start
+}
+
+PlexConnect_buttonstart()
+{
+echo "Enabling PlexConnect"
+	CONFIG="/boot/config/plugins/PlexConnect/PlexConnect.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG	
+		sleep 3
+		echo "Starting PlexConnect"
+	PlexConnect_start
+	fi
+}
+
+PlexConnect_update()
+{
+	PlexConnect_stop
+	sleep 1
+    echo "installing latest Version of PlexConnect"	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+	cd /tmp
+	git clone https://github.com/iBaa/PlexConnect.git
+	cp -Rfu /tmp/PlexConnect/* $INSTALLDIR
+	rm -Rf /tmp/PlexConnect
+	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
+	sleep 1
+	PlexConnect_start
+}
+
+write_config()
+{
+	echo "# PlexConnect configuration" > /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "DATADIR=\"$DATADIR\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "PORT=\"$PORT\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+	echo "PLG_DATACHECK=\"$PLG_DATACHECK\"" >> /boot/config/plugins/PlexConnect/PlexConnect.cfg
+
+ }
+
+PlexConnect_change_settings()
+{
+	PORT="$2"
+	INSTALLDIR="$3"
+	DATADIR="$4"
+	
+	if [ $DATADIR == "" ]; then
+		$DATADIR="$INSTALLDIR"
+	fi
+	
+	if [ $RUNAS != $1 ]; then
+		chown -R $1:users "$INSTALLDIR" "$DATADIR"
+	fi
+	
+	RUNAS="$1"
+	
+	PLG_STORAGESIZE="$5"
+	PLG_DATACHECK="$6"
+	
+	# create PlexConnect user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+PlexConnect_enable()
+{
+	# if not already enabled, enable it
+		SERVICE=enable
+		PlexConnect_stop
+		PlexConnect_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+		write_config
+        PlexConnect_start
+}
+
+PlexConnect_disable()
+{
+	PlexConnect_stop
+	SERVICE=disable
+	PlexConnect_change_settings $1 $2 $3 $4 $5 $6 $7 $8
+	write_config
+}
+
+PlexConnect_install()
+{	
+	echo "installing latest Version of PlexConnect"
+	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p $INSTALLDIR
+    fi
+	if [ ! -e "$DATADIR" ]; then 
+		mkdir -p $DATADIR
+    fi
+	
+	if [ -e ""$DATADIR"/version.txt" ]; then 
+		rm ""$DATADIR"/version.txt"
+	fi
+
+	cd /tmp
+	git clone https://github.com/iBaa/PlexConnect.git
+	cp -Rfu /tmp/PlexConnect/* $INSTALLDIR
+	rm -Rf /tmp/PlexConnect
+}
+
+PlexConnect_storagesize() 
+{
+	if [ $1 ] && [ $2 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+	
+		if [ -d $2 ]; then
+			DAT=`du -sh $2 | cut -f1`
+		elif [ -f $2 ]; then
+			DAT=`ls -lah $2 | awk '{ print $5}'`
+		fi
+		
+		if [ $1 == $2 ]; then
+			echo "<p style="margin-left:10px\;">Storage memory usage: install + data directory: <b>$INST</b></p>"
+		else
+			echo "<p style="margin-left:10px\;">Storage memory usage: install directory: <b>$INST</b>, data directory: <b>$DAT</b></p>"
+		fi
+	elif [ $1 ]; then
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+	fi
+}
+
+PlexConnect_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $DATADIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b> Your Data Directory is not persistent and WILL NOT survive a reboot. Please locate Data Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;"><b>WARNING:</b> Your Data Directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;">Your data will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+PlexConnect_updateplg()
+{
+	cd /boot/config/plugins
+	if [ -f PlexConnect_unplugged.plg ]; then
+	[ -f PlexConnect_unplugged.plg.old ] && rm -f PlexConnect_unplugged.plg.old
+	mv PlexConnect_unplugged.plg PlexConnect_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/PlexConnect_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/PlexConnect_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/PlexConnect_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/PlexConnect_unplugged.plg
+	fi
+}
+PlexConnect_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f PlexConnect_unplugged.plg.old ]; then
+	rm -f /PlexConnect_unplugged.plg
+	mv PlexConnect_unplugged.plg.old PlexConnect_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/PlexConnect_unplugged.plg
+	fi
+}
+PlexConnect_vercheck()
+{
+	cd $INSTALLDIR
+	curversion=$( git rev-parse HEAD )
+	echo "$curversion"
+}
+
+# read our configuration
+source /boot/config/plugins/PlexConnect/PlexConnect.cfg
+
+case "$1" in
+	'start')
+		PlexConnect_start
+	;;
+	'stop')
+		PlexConnect_stop
+	;;
+	'restart')
+		PlexConnect_restart
+	;;
+	'enable')
+		PlexConnect_enable $2 $3 $4 $5 $6 $7 $8
+	;;
+	'disable')
+		PlexConnect_disable $2 $3 $4 $5 $6 $7 $8
+	;;
+	'install')
+		PlexConnect_install
+	;;
+	'update')
+		PlexConnect_update
+	;;
+	'storagesize')
+		PlexConnect_storagesize $2 $3
+	;;
+	'datacheck')
+		PlexConnect_datacheck
+	;;
+	'updateplg')
+		PlexConnect_updateplg
+	;;
+	'downgradeplg')
+		PlexConnect_downgradeplg
+	;;
+	'buttonstart')
+		PlexConnect_buttonstart
+	;;
+	'vercheck')
+		PlexConnect_vercheck
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/PlexConnect.page">
+<INLINE>
+<![CDATA[
+Menu="unplugged"
+Icon="plexconnect.png"
+Version="0.2"
+Author="Influence; Wojciech Walaszek"
+Type="php"
+Title="PlexConnect"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/plexconnect.png">
+<LOCAL>/boot/config/plugins/headphones/plexconnect.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/PlexConnect.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$PlexConnect_cfg = parse_ini_file( "/boot/config/plugins/PlexConnect/PlexConnect.cfg");
+$PlexConnect_installed = file_exists( $PlexConnect_cfg["INSTALLDIR"] . "/PlexConnect.py" ) ? "yes" : "no";
+$PlexConnect_rollback = file_exists( "/boot/config/plugins/PlexConnect_unplugged.plg.old" ) ? "yes" : "no";
+if ($PlexConnect_installed=="yes")
+{
+	if ($PlexConnect_cfg[PLG_STORAGESIZE]=="yes")
+		$PlexConnect_datasize = shell_exec ( "/etc/rc.d/rc.PlexConnect storagesize $PlexConnect_cfg[INSTALLDIR] $PlexConnect_cfg[DATADIR]" );
+	if ($PlexConnect_cfg[PLG_DATACHECK]=="yes")
+		$PlexConnect_datacheck = shell_exec ( "/etc/rc.d/rc.PlexConnect datacheck" );
+	$PlexConnect_plgver = shell_exec ( "cat /boot/config/plugins/PlexConnect/plgver.txt" );
+	$PlexConnect_running = file_exists( "/var/run/PlexConnect/PlexConnect-".$PlexConnect_cfg['PORT'].".pid") ? "yes" : "no";
+	if (file_exists($PlexConnect_cfg["INSTALLDIR"] . "/PlexConnect.py"))
+		$PlexConnect_curversion = shell_exec( "/etc/rc.d/rc.PlexConnect vercheck" );
+	else
+		$PlexConnect_curversion = "Update at the bottom of the PlexConnect web page first"; 
+	$PlexConnect_newversion = shell_exec( "cd /tmp/ && wget -q -O feed.atom --no-check-certificate https://github.com/iBaa/PlexConnect/commits/master.atom && cat feed.atom | sed -n 's|tag:github.com,2008:Grit::Commit/\(.*\)|\\1|p' | sed '1q;d' | cut -d' ' -f5- | sed 's/....\(.*\)...../\\1/' && rm feed.atom" );		
+	$PlexConnect_installdirsize = trim(shell_exec( "if [ -e $PlexConnect_cfg[INSTALLDIR] ]; then du -sh $PlexConnect_cfg[INSTALLDIR] | cut -f1; else echo 0; fi"));
+	$PlexConnect_datadirsize = trim(shell_exec( "if [ -e $PlexConnect_cfg[DATADIR] ]; then du -sh $PlexConnect_cfg[DATADIR] | cut -f1; else echo 0; fi" ));
+}
+?>
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/PlexConnect/device_status.png'>
+			<?if ($PlexConnect_installed=="yes"):?>	
+				<?if ($PlexConnect_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$PlexConnect_cfg['PORT'];?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$PlexConnect_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($PlexConnect_installed=="yes"):?>
+		<?if ($PlexConnect_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="PlexConnect_start_stop" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect stop">
+					<input type="submit" name="runCmd" value="Stop">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="PlexConnect_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect restart">
+					<input type="submit" name="runCmd" value="Restart">
+				</form>
+			</div>			
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="PlexConnect_buttonstart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="PlexConnect_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($PlexConnect_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="PlexConnect_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="PlexConnect_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="PlexConnect_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($PlexConnect_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<p style="margin-left:10px;">PlexConnect is installed with version: <?=$PlexConnect_curversion;?></p>
+		<? if ($PlexConnect_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$PlexConnect_datasize?>
+		<? endif; ?>
+		<? if ($PlexConnect_cfg[PLG_DATACHECK]=="yes"): ?>
+			<?=$PlexConnect_datacheck?>
+		<? endif; ?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$PlexConnect_plgver;?></b></p>
+		<? if (strcmp($PlexConnect_curversion, $PlexConnect_newversion)!=0 && $PlexConnect_curversion!="couldn't determine the PlexConnect version"): ?>
+			<center>
+				<form name="PlexConnect_settings" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect update">
+					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$PlexConnect_newversion;?></b></p>
+					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
+					<input type="submit" name="runCmd" value="Update">
+				</form>	 
+			</center>
+		<? endif; ?>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/PlexConnect/new_config.png'></span>
+	</div>
+	<form name="PlexConnect_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.PlexConnect">
+		<table class="settings">
+			<tr>
+				<td>Enable PlexConnect:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($PlexConnect_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($PlexConnect_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg4" maxlength="60" value="<?=$PlexConnect_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Data directory:</td>
+				<td><input type="checkbox" name="use_data" <?=($PlexConnect_cfg['DATADIR']!=$PlexConnect_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$PlexConnect_cfg['DATADIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$PlexConnect_cfg['PORT'];?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($PlexConnect_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($PlexConnect_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($PlexConnect_cfg['RUNAS'] != "root" && $PlexConnect_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$PlexConnect_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($PlexConnect_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($PlexConnect_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg6" value="<?=$PlexConnect_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+			<tr>
+				<td>Show data persistency information:</td>
+				<td>
+					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+						<?=mk_option($PlexConnect_cfg['PLG_DATACHECK'], "yes", "Yes");?>
+						<?=mk_option($PlexConnect_cfg['PLG_DATACHECK'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg7" value="<?=$PlexConnect_cfg['PLG_DATACHECK'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:35px">
+			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+	</form>
+	<br />
+</div>
+<script type="text/javascript">
+
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg2.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg2.type = "hidden";
+	}
+	else
+	{
+		form.arg2.value = "<?=$PlexConnect_cfg['RUNAS'];?>";
+		form.arg2.type = "text";
+	}
+}
+
+function checkDATADIR(form)
+{
+	if (form.use_data.checked == false )
+	{
+		form.arg5.value = form.arg4.value;;
+		form.arg5.type = "hidden";
+	}
+	else
+	{
+		form.arg5.value = "<?=$PlexConnect_cfg['DATADIR'];?>";
+		form.arg5.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg6.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+checkINSTALLDIR(document.PlexConnect_settings);
+checkUSER(document.PlexConnect_settings);
+checkDATADIR(document.PlexConnect_settings);
+checkSTORAGE(document.PlexConnect_settings);
+checkDATA(document.PlexConnect_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+source /boot/config/plugins/PlexConnect/PlexConnect.cfg
+if [ $SERVICE = enable ]; then
+/etc/rc.d/rc.PlexConnect start
+fi
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/PlexConnect/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.PlexConnect stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/PlexConnect-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/PlexConnect/PlexConnect.cfg
+
+# create PlexConnect-writable directory for pid file
+if [ ! -e /var/run/PlexConnect ]; then
+  mkdir /var/run/PlexConnect
+  chown $RUNAS:users /var/run/PlexConnect
+  chmod 0777 /var/run/PlexConnect
+fi
+rm /tmp/PlexConnect-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/PlexConnect">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
