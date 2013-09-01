@@ -18,33 +18,33 @@ I have...
  * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
-<FILE Name="/boot/packages/python-2.7.3-i486-2.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/d/python-2.7.3-i486-2.txz</URL>
-<MD5>14740c268031f7fe09f2f8d533c6da8f</MD5>
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
-<FILE Name="/boot/packages/zlib-1.2.6-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/l/zlib-1.2.6-i486-1.txz</URL>
-<MD5>eb95b85eacb65f32deeec369b58e3825</MD5>
+<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
+<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
 </FILE>
-<FILE Name="/boot/packages/libidn-1.25-i486-2.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/l/libidn-1.25-i486-2.txz</URL>
-<MD5>bd13034446d71ce8b140efd4b12f7df7</MD5>
+<FILE Name="/boot/packages/libidn-1.26-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libidn-1.26-i686-1PTr.txz?dl=1</URL>
+<MD5>4b0b70c9f32d91d84a88270dc499844a</MD5>
 </FILE>
 <FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
 <URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
 <MD5>9535ac8193f269729467357b068117aa</MD5>
 </FILE>
-<FILE Name="/boot/packages/sqlite-3.7.13-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/ap/sqlite-3.7.13-i486-1.txz</URL>
-<MD5>01dfd7fcfac2943227fc3f981e69c05d</MD5>
+<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
+<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
 </FILE>
-<FILE Name="/boot/packages/curl-7.27.0-i486-2.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/n/curl-7.27.0-i486-2.txz</URL>
-<MD5>0b3b3864205793754a42b237b1f10550</MD5>
+<FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
+<MD5>e32449e0588ef54df8524827028972e8</MD5>
 </FILE>
-<FILE Name="/boot/packages/git-1.7.12.1-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-14.0/slackware/d/git-1.7.12.1-i486-1.txz</URL>
-<MD5>533d09ccdd3839161b8a12443045512d</MD5>
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
 </FILE>
 <FILE Name="/boot/config/plugins/sickbeard/sickbeard.png">
 <URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/sickbeard.png</URL>
