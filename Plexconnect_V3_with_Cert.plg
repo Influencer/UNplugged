@@ -115,15 +115,16 @@ PlexConnect_start()
 	    chmod -R 777 $DATADIR
 	fi
 
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/PlexConnect.py -d -o $DATADIR/plexconnect --nolaunch --pidfile /var/run/PlexConnect/PlexConnect-$PORT.pid"
+	CMDLINE="screen -S PlexConnect -d -m sudo -u $RUNAS python $INSTALLDIR/PlexConnect.py"
+	ps -ef | grep PlexConnect | awk '{print $2}' > /var/run/PlexConnect/PlexConnect-$PORT.pid
 	echo -n "Starting PlexConnect:  $CMDLINE"
 	$CMDLINE
 	echo
-  
+
 	while [ ! -e /var/run/PlexConnect/PlexConnect-$PORT.pid  ]; do
 		sleep 1
 	done
-	echo "... OK"
+	echo "... OK. Please Refresh the Page"
 	sleep 1
 }
 
@@ -410,7 +411,7 @@ Title="Plexconnect_V3_with_Cert.plg"
 </FILE>
 
 <FILE Name="/usr/local/emhttp/plugins/PlexConnect/plexconnect.png">
-<LOCAL>/boot/config/plugins/headphones/plexconnect.png</LOCAL>
+<LOCAL>/boot/config/plugins/PlexConnect/plexconnect.png</LOCAL>
 </FILE>
 
 <FILE Name="/usr/local/emhttp/plugins/PlexConnect/device_status.png">
@@ -598,6 +599,7 @@ if ($PlexConnect_installed=="yes")
 		</table>
 		<div align="center">
 			<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+
 			<input type="submit" name="runCmd" value="Apply" style="margin-bottom:35px">
 			<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
 		</div>
