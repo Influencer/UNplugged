@@ -193,7 +193,7 @@ PlexConnect_update()
 	fi
 	cd /tmp
 	git clone https://github.com/iBaa/PlexConnect.git
-	cp -Rfu /tmp/PlexConnect/* $INSTALLDIR
+	cp -Rfu /tmp/PlexConnect/. $INSTALLDIR
 	rm -Rf /tmp/PlexConnect
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 1
