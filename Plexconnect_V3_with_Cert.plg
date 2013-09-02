@@ -11,6 +11,7 @@ Ibfluencer: for the framework which i used to make this work
 PIOTRASD: for compiling the python 2.7.3 package
 
 02.09.13
+1.0.3 - Added Screen package
 1.0.2 - got it working
 01.09.13
 1.0.1 - messing to get it to work with screen
@@ -66,7 +67,7 @@ rm /tmp/PlexConnect-cleanup
 <FILE Name="/boot/config/plugins/PlexConnect/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0.2
+1.0.3
 ]]>
 </INLINE>
 </FILE>
