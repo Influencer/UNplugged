@@ -8,7 +8,13 @@ All dependencies are installed as needed and everything is controlable from the 
 Credits:
 Benni-Chan: Originally creating the plug-in. Much of his code is still in
 
-WW: Some config page formatting
+02.09.13
+1.0.2 - got it working
+01.09.13
+1.0.1 - messing to get it to work with screen
+30.08.13
+1.0.0 - initial copy/paste job
+
 
 I have...
  * probably missed some credits here, not intentional but I do not have a perfect memory!
@@ -54,7 +60,7 @@ rm /tmp/PlexConnect-cleanup
 <FILE Name="/boot/config/plugins/PlexConnect/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0.0
+1.0.2
 ]]>
 </INLINE>
 </FILE>
