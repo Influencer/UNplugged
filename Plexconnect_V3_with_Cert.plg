@@ -124,7 +124,7 @@ PlexConnect_start()
 	while [ ! -e /var/run/PlexConnect/PlexConnect-$PORT.pid  ]; do
 		sleep 1
 	done
-	echo "... OK. Please Refresh the Page"
+	echo "... OK"
 	sleep 1
 }
 
