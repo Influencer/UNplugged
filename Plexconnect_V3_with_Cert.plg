@@ -416,9 +416,9 @@ esac
 Menu="unplugged"
 Icon="plexconnect.png"
 Version="0.2"
-Author="Influence; Wojciech Walaszek"
+Author="Sacretagent"
 Type="php"
-Title="Plexconnect_V3_with_Cert.plg"
+Title="Plexconnect_V3_with_Cert"
 ]]>
 </INLINE>
 </FILE>
