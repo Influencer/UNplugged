@@ -11,6 +11,7 @@ Ibfluencer: for the framework which i used to make this work
 PIOTRASD: for compiling the python 2.7.3 package
 
 02.09.13
+1.0.4 - Specified Pythonversion
 1.0.3 - Added Screen package
 1.0.2 - got it working
 01.09.13
@@ -67,7 +68,7 @@ rm /tmp/PlexConnect-cleanup
 <FILE Name="/boot/config/plugins/PlexConnect/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0.3
+1.0.4
 ]]>
 </INLINE>
 </FILE>
@@ -128,7 +129,7 @@ PlexConnect_start()
 	    chmod -R 777 $DATADIR
 	fi
 
-	CMDLINE="screen -S PlexConnect -d -m sudo -u $RUNAS python $INSTALLDIR/PlexConnect.py"
+	CMDLINE="screen -S PlexConnect -d -m sudo -u $RUNAS python2.7 $INSTALLDIR/PlexConnect.py"
 	ps -ef | grep PlexConnect | awk '{print $2}' > /var/run/PlexConnect/PlexConnect-$PORT.pid
 	echo -n "Starting PlexConnect:  $CMDLINE"
 	$CMDLINE
