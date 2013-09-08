@@ -127,7 +127,7 @@ headphones_start()
 	    chmod -R 777 $DATADIR
 	fi
 
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/Headphones.py -d -p $PORT --datadir $DATADIR --nolaunch --pidfile /var/run/headphones/headphones-$PORT.pid"
+	CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/Headphones.py -d -p $PORT --datadir $DATADIR --nolaunch --pidfile /var/run/headphones/headphones-$PORT.pid"
 	echo -n "Starting headphones:  $CMDLINE"
 	$CMDLINE
 	echo
@@ -413,7 +413,7 @@ esac
 <![CDATA[
 Menu="unplugged"
 Icon="headphones.png"
-Version="0.2"
+Version="1.1"
 Author="Influence; Wojciech Walaszek"
 Type="php"
 Title="Headphones"
