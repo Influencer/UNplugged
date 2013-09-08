@@ -165,12 +165,12 @@ sickbeard_start()
 	cd
 	#Check if force-update should be done on startup
 	if [ "$FORCEUPDATE" = "yes" ]; then
-		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --forceupdate --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
+		CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/SickBeard.py --daemon --forceupdate --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
 		echo "Starting SickBeard: $CMDLINE"
 		sleep 1
 		nohup $CMDLINE > /dev/null 2>&1 &
 	else  
-		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
+		CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
 		echo "Starting SickBeard: $CMDLINE"
 		sleep 1
 		nohup $CMDLINE > /dev/null 2>&1 &
@@ -454,7 +454,7 @@ esac
 <![CDATA[
 Menu="unplugged"
 Icon="sickbeard.png"
-Version="1.0"
+Version="2.1"
 Author="Benjamin Waller; Influencer"
 Type="php"
 Title="SickBeard"
