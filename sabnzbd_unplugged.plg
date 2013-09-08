@@ -509,7 +509,7 @@ esac
 <![CDATA[
 Menu="unplugged"
 Icon="sabnzbd.png"
-Version="0.8"
+Version="1.1"
 Author="Benjamin Waller; Influencer; Wojciech Walaszek"
 Type="php"
 Title="SABnzbd"
