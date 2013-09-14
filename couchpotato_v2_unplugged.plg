@@ -17,13 +17,17 @@ I have...
  * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
-<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
-<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
-<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
-<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
+<FILE Name="/boot/packages/zlib-1.2.7-i686-2PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/zlib-1.2.7-i686-2PTr.txz?dl=1</URL>
+<MD5>e68aca878cb2c95af873e7ae4c231d45</MD5>
+</FILE>
+<FILE Name="/boot/packages/libffi-3.0.13-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libffi-3.0.13-i686-1PTr.txz?dl=1</URL>
+<MD5>b8c4ec614c22598e063bcf0ca6b2679e</MD5>
 </FILE>
 <FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
@@ -159,7 +163,7 @@ couchpotato_start()
 		couchpotato_install
 	fi
   
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/CouchPotato.py --daemon --config_file $CONFIGFILE --pid_file /var/run/couchpotato_v2/couchpotato_v2.pid"
+	CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/CouchPotato.py --daemon --config_file $CONFIGFILE --pid_file /var/run/couchpotato_v2/couchpotato_v2.pid"
 	echo "Starting CouchPotato v2: $CMDLINE"
 	sleep 1
 	$CMDLINE
@@ -316,8 +320,8 @@ source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 	
 	cd /tmp
 	git clone -b $BRANCH $INSTALLURL Couchpotato
-	cp -Rfu /tmp/Couchpotato/* $INSTALLDIR
-	rm -Rf /tmp/Couchpotato
+	cp -Rfu /tmp/CouchPotatoServer/. $INSTALLDIR
+	rm -Rf /tmp/CouchPotatoServer
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 1

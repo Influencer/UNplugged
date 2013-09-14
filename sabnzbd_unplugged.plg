@@ -14,9 +14,10 @@ WW: Install & Data Directory size, some config page formatting.
 I have probably missed some credits here, not intentional but I do not have a perfect memory!
 -->
 
-<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
-<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
 <FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
 <URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
@@ -107,7 +108,7 @@ rm /tmp/checkconfig
 <FILE Name="/boot/config/plugins/sabnzbd/plgver.txt">
 <INLINE>
 <![CDATA[
-2.5.3
+2.6.1
 ]]>
 </INLINE>
 </FILE>
@@ -157,9 +158,9 @@ sabnzbd_start()
 	fi
     
 	if [ ! -r $INSTALLDIR/sabnzbd/api.pyo ]; then
-	CMDLINE="sudo -u $RUNAS python -OO $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
+	CMDLINE="sudo -u $RUNAS python2.7 -OO $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
 	else
-	CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
+	CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
 	fi
 	
 	echo "Starting SABnzbd: $CMDLINE"
@@ -508,7 +509,7 @@ esac
 <![CDATA[
 Menu="unplugged"
 Icon="sabnzbd.png"
-Version="0.8"
+Version="1.1"
 Author="Benjamin Waller; Influencer; Wojciech Walaszek"
 Type="php"
 Title="SABnzbd"
@@ -558,7 +559,7 @@ if ($sabnzbd_installed=="yes")
 	if ($sabnzbd_cfg[PLG_DATACHECK]=="yes") {
 		$sabnzbd_datacheck = shell_exec ( "/etc/rc.d/rc.sabnzbd datacheck" );
 		}
-	$sabnzbd_curversion = shell_exec ( "python $sabnzbd_cfg[INSTALLDIR]/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21" );
+	$sabnzbd_curversion = shell_exec ( "python2.7 $sabnzbd_cfg[INSTALLDIR]/SABnzbd.py --version | sed '/SABnzbd.py*/!d' | cut -c12-21" );
 	$sabnzbd_newversion = shell_exec ( "/etc/rc.d/rc.sabnzbd newversion" );
 } else {
 	if (file_exists("/boot/config/plugins/sabnzbd/sabnzbd.ini")) {

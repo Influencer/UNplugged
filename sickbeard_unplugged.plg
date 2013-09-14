@@ -18,17 +18,17 @@ I have...
  * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
-<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
-<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
 <FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
 <MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
 </FILE>
-<FILE Name="/boot/packages/libidn-1.19-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/libidn-1.19-i486-1.txz</URL>
-<MD5>d412b0bd8f1f0731ec3e39702bf3a78c</MD5>
+<FILE Name="/boot/packages/libidn-1.26-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libidn-1.26-i686-1PTr.txz?dl=1</URL>
+<MD5>4b0b70c9f32d91d84a88270dc499844a</MD5>
 </FILE>
 <FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
 <URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
@@ -74,7 +74,7 @@ rm /tmp/sickbeard-cleanup
 <FILE Name="/boot/config/plugins/sickbeard/plgver.txt">
 <INLINE>
 <![CDATA[
-2.4
+2.5.1
 ]]>
 </INLINE>
 </FILE>
@@ -165,12 +165,12 @@ sickbeard_start()
 	cd
 	#Check if force-update should be done on startup
 	if [ "$FORCEUPDATE" = "yes" ]; then
-		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --forceupdate --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
+		CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/SickBeard.py --daemon --forceupdate --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
 		echo "Starting SickBeard: $CMDLINE"
 		sleep 1
 		nohup $CMDLINE > /dev/null 2>&1 &
 	else  
-		CMDLINE="sudo -u $RUNAS python $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
+		CMDLINE="sudo -u $RUNAS python2.7 $INSTALLDIR/SickBeard.py --daemon --port $PORT --datadir $DATADIR --pidfile /var/run/sickbeard/sickbeard.pid > /dev/null 2>&1"
 		echo "Starting SickBeard: $CMDLINE"
 		sleep 1
 		nohup $CMDLINE > /dev/null 2>&1 &
@@ -454,7 +454,7 @@ esac
 <![CDATA[
 Menu="unplugged"
 Icon="sickbeard.png"
-Version="1.0"
+Version="2.1"
 Author="Benjamin Waller; Influencer"
 Type="php"
 Title="SickBeard"
