@@ -16,19 +16,19 @@ I have probably missed some credits here, not intentional but I do not have a pe
 
 
 <FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz</URL>
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/python-2.7.3-i686-5PTr.txz</URL>
 <MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
 <FILE Name="/boot/packages/sqlite-3.7.16-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/XDOLPAHvsQ/sqlite-3.7.16-i686-1PTr.txz</URL>
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/sqlite-3.7.16-i686-1PTr.txz</URL>
 <MD5>104865e791d032e91a85d9c134b21be1</MD5>
 </FILE>
 <FILE Name="/boot/packages/unrar-4.2.4-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/LURiVYTl67/unrar-4.2.4-i686-1PTr.txz</URL>
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/unrar-4.2.4-i686-1PTr.txz</URL>
 <MD5>e925b83ef6be731ff4c4c7323f36f2e9</MD5>
 </FILE>
 <FILE Name="/boot/packages/infozip-6.0-i486-1.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/2tMvFci_p1/infozip-6.0-i686-4PTr.txz</URL>
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/infozip-6.0-i686-4PTr.txz</URL>
 <MD5>96f87543dac7654fa65407c3205a7311</MD5>
 </FILE>
 <FILE Name="/boot/packages/openssl-0.9.8r-i486-3.txz" Run="upgradepkg --install-new">
