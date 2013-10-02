@@ -29,9 +29,9 @@ I have...
 <URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libffi-3.0.13-i686-1PTr.txz?dl=1</URL>
 <MD5>b8c4ec614c22598e063bcf0ca6b2679e</MD5>
 </FILE>
-<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
-<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
+<FILE Name="/boot/packages/sqlite-3.7.16-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>https://dl.dumptruck.goldenfrog.com/p/XDOLPAHvsQ/sqlite-3.7.16-i686-1PTr.txz</URL>
+<MD5>104865e791d032e91a85d9c134b21be1</MD5>
 </FILE>
 <FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
@@ -41,6 +41,7 @@ I have...
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
 <MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
 </FILE>
+
 <FILE Name="/boot/config/plugins/couchpotato_v2/couchpotato_v2.png">
 <URL>--no-check-certificate https://github.com/downloads/W-W/unRAID/couchpotato_v2.png</URL>
 </FILE>
