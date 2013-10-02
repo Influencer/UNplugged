@@ -18,15 +18,15 @@ I have...
 -->
 
 <FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz</URL>
 <MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
 <FILE Name="/boot/packages/zlib-1.2.7-i686-2PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/zlib-1.2.7-i686-2PTr.txz?dl=1</URL>
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/zlib-1.2.7-i686-2PTr.txz</URL>
 <MD5>e68aca878cb2c95af873e7ae4c231d45</MD5>
 </FILE>
 <FILE Name="/boot/packages/libffi-3.0.13-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libffi-3.0.13-i686-1PTr.txz?dl=1</URL>
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libffi-3.0.13-i686-1PTr.txz</URL>
 <MD5>b8c4ec614c22598e063bcf0ca6b2679e</MD5>
 </FILE>
 <FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
