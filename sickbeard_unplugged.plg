@@ -31,7 +31,7 @@ I have...
 <MD5>4b0b70c9f32d91d84a88270dc499844a</MD5>
 </FILE>
 <FILE Name="/boot/packages/sqlite-3.7.16-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>https://dl.dumptruck.goldenfrog.com/p/XDOLPAHvsQ/sqlite-3.7.16-i686-1PTr.txz</URL>
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/XDOLPAHvsQ/sqlite-3.7.16-i686-1PTr.txz</URL>
 <MD5>104865e791d032e91a85d9c134b21be1</MD5>
 </FILE>
 <FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
