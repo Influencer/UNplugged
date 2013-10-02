@@ -16,28 +16,20 @@ I have probably missed some credits here, not intentional but I do not have a pe
 
 
 <FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz</URL>
 <MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
-<FILE Name="/boot/packages/python-cheetah-2.4.4-i486-1alien.tgz" Run="upgradepkg --install-new">
-<URL>http://connie.slackware.com/~alien/slackbuilds/python-cheetah/pkg/13.37/python-cheetah-2.4.4-i486-1alien.tgz</URL>
-<MD5>9535ac8193f269729467357b068117aa</MD5>
+<FILE Name="/boot/packages/sqlite-3.7.16-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/XDOLPAHvsQ/sqlite-3.7.16-i686-1PTr.txz</URL>
+<MD5>104865e791d032e91a85d9c134b21be1</MD5>
 </FILE>
-<FILE Name="/boot/packages/python-yenc-0.3-i486-1alien.tgz" Run="upgradepkg --install-new">
-<URL>http://connie.slackware.com/~alien/slackbuilds/python-yenc/pkg/13.37/python-yenc-0.3-i486-1alien.tgz</URL>
-<MD5>904c93692352cc2ddb8a3f769408bfad</MD5>
-</FILE>
-<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
-<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
-</FILE>
-<FILE Name="/boot/packages/unrar-4.2.4-i486-1alien.tgz" Run="upgradepkg --install-new">
-<URL>http://www.slackware.com/~alien/slackbuilds/unrar/pkg/13.37/unrar-4.2.4-i486-1alien.tgz</URL>
-<MD5>26b4b3d9a10cb8bf7a4dd746de30e80b</MD5>
+<FILE Name="/boot/packages/unrar-4.2.4-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/LURiVYTl67/unrar-4.2.4-i686-1PTr.txz</URL>
+<MD5>e925b83ef6be731ff4c4c7323f36f2e9</MD5>
 </FILE>
 <FILE Name="/boot/packages/infozip-6.0-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/a/infozip-6.0-i486-1.txz</URL>
-<MD5>4d59c199192a5fc4dc55089edcb66723</MD5>
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/2tMvFci_p1/infozip-6.0-i686-4PTr.txz</URL>
+<MD5>96f87543dac7654fa65407c3205a7311</MD5>
 </FILE>
 <FILE Name="/boot/packages/openssl-0.9.8r-i486-3.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/n/openssl-0.9.8r-i486-3.txz</URL>
