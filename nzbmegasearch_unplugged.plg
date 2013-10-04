@@ -66,7 +66,6 @@ rm /tmp/nzbmegasearch-cleanup
 # nzbmegasearch configuration:
 SERVICE="disable"
 INSTALLDIR="/usr/local/nzbmegasearch"
-PORT="5000"
 RUNAS="nobody"
 PLG_STORAGESIZE="yes"
 PLG_DATACHECK="yes"
@@ -357,7 +356,7 @@ esac
 <INLINE>
 <![CDATA[
 Menu="unplugged"
-Icon="nzbmegasearch.png"
+Icon="nzbmegasearch_logo.png"
 Version="1.0"
 Author="Benjamin Waller; Influencer"
 Type="php"
@@ -405,7 +404,7 @@ if ($nzbmegasearch_installed=="yes")
 	if (file_exists($nzbmegasearch_cfg["INSTALLDIR"] . "/custom_params.ini"))
 		$nzbmegasearch_port = trim(shell_exec( "cat $nzbmegasearch_cfg[INSTALLDIR]/custom_params.ini | grep 'port =' | cut -d' ' -f3" ));
 	else
-		$nzbmegasearch_port = "CLUE";
+		$nzbmegasearch_port = "5000";
 	}
 ?>
 
