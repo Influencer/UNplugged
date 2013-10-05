@@ -10,7 +10,8 @@ Benni-Chan: Originally creating the plug-in. Much of his code is still in
 Ibfluencer: for the framework which i used to make this work
 PIOTRASD: for compiling the python 2.7.3 package
 
-02.09.13
+05.10.13
+1.0.5 - Added 2 more packages for dependencies if not installed together with Sickbeard
 1.0.4 - Specified Pythonversion
 1.0.3 - Added Screen package
 1.0.2 - got it working
@@ -76,7 +77,7 @@ rm /tmp/PlexConnect-cleanup
 <FILE Name="/boot/config/plugins/PlexConnect/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0.4
+1.0.5
 ]]>
 </INLINE>
 </FILE>
