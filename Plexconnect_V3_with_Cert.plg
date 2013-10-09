@@ -10,7 +10,8 @@ Benni-Chan: Originally creating the plug-in. Much of his code is still in
 Ibfluencer: for the framework which i used to make this work
 PIOTRASD: for compiling the python 2.7.3 package
 
-02.09.13
+05.10.13
+1.0.5 - Added 2 more packages for dependencies if not installed together with Sickbeard
 1.0.4 - Specified Pythonversion
 1.0.3 - Added Screen package
 1.0.2 - got it working
@@ -34,6 +35,14 @@ I have...
 <FILE Name="/boot/packages/screen-4.0.3-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/screen-4.0.3-i486-1.txz</URL>
 <MD5>1a59b0fdac921b858510d57e43f77543</MD5>
+</FILE>
+<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
+<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
+</FILE>
+<FILE Name="/boot/packages/libidn-1.26-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/libidn-1.26-i686-1PTr.txz?dl=1</URL>
+<MD5>4b0b70c9f32d91d84a88270dc499844a</MD5>
 </FILE>
 <FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
@@ -68,7 +77,7 @@ rm /tmp/PlexConnect-cleanup
 <FILE Name="/boot/config/plugins/PlexConnect/plgver.txt">
 <INLINE>
 <![CDATA[
-1.0.4
+1.0.5
 ]]>
 </INLINE>
 </FILE>

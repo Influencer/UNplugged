@@ -19,23 +19,24 @@ I have probably missed some credits here, not intentional but I do not have a pe
 <MD5>e32449e0588ef54df8524827028972e8</MD5>
 </FILE>
 
-<FILE Name="/boot/packages/libevent-2.0.11-i486-1sl.txz" Run="upgradepkg --install-new">
-<URL>http://repository.slacky.eu/slackware-13.37/libraries/libevent/2.0.11/libevent-2.0.11-i486-1sl.txz</URL>
-<MD5>983db1f4445d017ba6bd3731dc63d499</MD5>
+<FILE Name="/boot/packages/libevent-2.0.21-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/libevent-2.0.21-i686-1PTr.txz</URL>
+<MD5>0073604de2a5d507c0b707601af2f5f2</MD5>
 </FILE>
 
-<FILE Name="/boot/packages/libidn-1.19-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/libidn-1.19-i486-1.txz</URL>
-<MD5>d412b0bd8f1f0731ec3e39702bf3a78c</MD5>
+<FILE Name="/boot/packages/libidn-1.26-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/libidn-1.26-i686-1PTr.txz</URL>
+<MD5>4b0b70c9f32d91d84a88270dc499844a</MD5>
 </FILE>
 
-<FILE Name="/boot/packages/openldap-client-2.4.21-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.oregonstate.edu//slackware-13.1/slackware/n/openldap-client-2.4.21-i486-1.txz</URL>
-<MD5>330d34e3b0d896cd1033fe3eddb3b259</MD5>
+<FILE Name="/boot/packages/openldap-client-2.4.34-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/openldap-client-2.4.34-i686-1PTr.txz</URL>
+<MD5>7e846abb9c5d10cc6d46d5efedb7f148</MD5>
 </FILE>
 
 <FILE Name="/boot/packages/transmission-2.82-i686-1PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/xMFuwP-gJp/transmission-2.82-i686-1PTr.txz</URL>
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/transmission-2.82-i686-1PTr.txz</URL>
+<MD5>e4ee16ff27d8a591cda0c958489855cd</MD5>
 </FILE>
 
 <FILE Name="/boot/config/plugins/transmission/transmission.png">
