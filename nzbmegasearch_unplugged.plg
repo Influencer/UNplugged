@@ -1,0 +1,622 @@
+<?xml version='1.0' standalone='yes'?>
+<PLUGIN>
+
+<!--
+This is the dev branch!!!
+This Plugin installs and controls NZBMegasearch for UnRaid.
+All dependencies are installed as needed and everything is controllable from the webgui
+
+Credits: 
+Benni-Chan: Originally creating the plug-in. Much of his code is still in
+place and changes have been made for new features and fixes.
+
+WW: Install & Data Directory size, some config page formatting, multi-branch selection
+
+I have...
+ * probably missed some credits here, not intentional but I do not have a perfect memory!
+ * made changes and added features myself. I have removed the changelog from the plug-in itself.
+ * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
+-->
+
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
+</FILE>
+
+<FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
+<MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
+</FILE>
+<FILE Name="/boot/config/plugins/nzbmegasearch/nzbmegasearch_logo.png">
+<URL>--no-check-certificate https://github.com/Influencer/UNplugged/raw/dev/megasearch_logo.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/device_status.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/device_status.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/new_config.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/new_config.png</URL>
+</FILE>
+<FILE Name="/boot/config/plugins/images/information.png">
+<URL>--no-check-certificate https://github.com/downloads/Influencer/UNplugged/information.png</URL>
+</FILE>
+
+<!-- clean up previous install -->
+<FILE Name="/tmp/nzbmegasearch-cleanup" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+[ -d /usr/local/emhttp/plugins/nzbmegasearch ] && rm -f -R /usr/local/emhttp/plugins/nzbmegasearch
+[ -f /etc/rc.d/rc.nzbmegasearch ] && rm -f /etc/rc.d/rc.nzbmegasearch
+[ -f /boot/config/plugins/nzbmegasearch/plgver.txt ] && rm -f /boot/config/plugins/nzbmegasearch/plgver.txt
+rm /tmp/nzbmegasearch-cleanup
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/nzbmegasearch/plgver.txt">
+<INLINE>
+<![CDATA[
+1.0
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg">
+<INLINE>
+<![CDATA[
+# nzbmegasearch configuration:
+SERVICE="disable"
+INSTALLDIR="/usr/local/nzbmegasearch"
+RUNAS="nobody"
+PLG_STORAGESIZE="yes"
+PLG_DATACHECK="yes"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/webGui/unplugged.page">
+<INLINE>
+<![CDATA[
+Author="Influencer"
+Version="1.0.0"
+Title="Unplugged PLG"
+Menu="Settings"
+Type="menu"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/etc/rc.d/rc.nzbmegasearch" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/sh
+# start|stop|restart|enable|disable|install|update|storagesize|datacheck nzbmegasearch.
+
+nzbmegasearch_start()
+{
+	# no-op if not enabled
+	if [ $SERVICE != "enable" ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG
+	fi
+  
+	# no-op if already running
+	if [ -r /var/run/nzbmegasearch/nzbmegasearch.pid ]; then
+		return
+	fi
+  
+	# if directory doesn't exist or nzbmegasearch is not found, install it
+	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/mega2.py" ]]; then
+		nzbmegasearch_install
+	fi
+	cd
+	
+    CMDLINE="sudo -u $RUNAS python $INSTALLDIR/mega2.py > /dev/null 2>&1"
+	echo "Starting NZBmegasearch: $CMDLINE"
+		sleep 1
+		cd $INSTALLDIR
+		$CMDLINE > /dev/null 2>&1 &
+		echo $! > /var/run/nzbmegasearch/nzbmegasearch.pid		
+		
+	TIMER=0
+	while [ ! -e /var/run/nzbmegasearch/nzbmegasearch.pid ]; do
+		sleep 1
+		let TIMER=$TIMER+1
+	        echo -n $TIMER
+			
+	        if [ $TIMER -gt 10 ]; then
+        	        echo -n "nzbmegasearch.pid not created for some reason"
+                	break
+        	fi
+
+	done
+	echo "... OK"
+}
+
+nzbmegasearch_stop()
+{
+	# no-op if not running
+	if [ ! -r /var/run/nzbmegasearch/nzbmegasearch.pid ]; then
+		return
+	fi
+	
+	echo "Stopping nzbmegasearch..."
+	sleep 1
+	kill $(cat /var/run/nzbmegasearch/nzbmegasearch.pid)
+	sleep 3
+	
+	if [ -e /var/run/nzbmegasearch/nzbmegasearch.pid ]; then
+		kill -9 $(cat /var/run/nzbmegasearch/nzbmegasearch.pid )
+		rm /var/run/nzbmegasearch/nzbmegasearch.pid
+	fi
+	echo "... OK"
+	sleep 1
+}
+
+nzbmegasearch_restart()
+{
+	nzbmegasearch_stop
+	sleep 1
+	nzbmegasearch_start
+}
+
+nzbmegasearch_buttonstart()
+{
+echo "Enabling nzbmegasearch"
+	CONFIG="/boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg"
+	if [ -f $CONFIG ]; then
+		sed -i "s/"disable"/"enable/"" $CONFIG
+		sleep 3
+		echo "Starting nzbmegasearch"
+	nzbmegasearch_start
+	fi
+}
+
+nzbmegasearch_update()
+{
+	nzbmegasearch_stop
+	sleep 1
+	nzbmegasearch_install
+	sleep 1
+	nzbmegasearch_start
+}
+
+write_config()
+{
+	CONFIG="$INSTALLDIR/custom_params.ini"
+	echo "# nzbmegasearch configuration:" > /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+	echo "RUNAS=\"$RUNAS\"" >> /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+	echo "PLG_STORAGESIZE=\"$PLG_STORAGESIZE\"" >> /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+	if [ -e "$CONFIG" ]; then
+		sed -i 's!port = '"`cat "$CONFIG" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==1'`"'!port = '"$PORT"'!' "$CONFIG"
+	fi
+}
+
+nzbmegasearch_change_settings()
+{
+	INSTALLDIR="$1"
+	
+	if [ $RUNAS != $3 ]; then
+		chown -R $3:users "$INSTALLDIR"
+	fi
+	
+	RUNAS="$3"
+	
+	PORT="$2"
+	
+	PLG_STORAGESIZE="$4"
+	
+	# create nzbmegasearch user if necessary
+	if [[ $RUNAS != "nobody" && $RUNAS != "root" ]]; then
+		if ( ! grep -q ^$RUNAS /etc/passwd ); then
+	  		useradd -r -g users -d / -s /bin/false $RUNAS &> /dev/null
+	  		cp /etc/passwd /etc/shadow /boot/config
+		fi
+	fi
+}
+
+nzbmegasearch_enable()
+{
+	SERVICE=enable
+  		nzbmegasearch_change_settings $1 $2 $3 $4 $5 $6 $7 $8 $9
+		write_config
+		nzbmegasearch_restart
+}
+
+nzbmegasearch_disable()
+{
+	nzbmegasearch_stop
+	SERVICE=disable
+	nzbmegasearch_change_settings $1 $2 $3 $4 $5 $6 $7 $8 $9
+	write_config
+}
+
+nzbmegasearch_install()
+{
+	echo "Installing latest version of nzbmegasearch..."
+	
+	if [ ! -e "$INSTALLDIR" ]; then 
+		mkdir -p "$INSTALLDIR"
+    fi
+	
+	cd /tmp
+	git clone https://github.com/pillone/usntssearch.git usntssearch
+	cp -Rfu /tmp/usntssearch/NZBmegasearch/* $INSTALLDIR
+	rm -Rf /tmp/usntssearch
+	chmod -R 777 "$INSTALLDIR"
+	chown -R $RUNAS:users "$INSTALLDIR"
+	sleep 3
+	echo "... OK"
+	sleep 1
+}
+
+nzbmegasearch_storagesize() 
+{
+		if [ -d $1 ]; then
+			INST=`du -sh $1 | cut -f1`
+		elif [ -f $1 ]; then
+			INST=`ls -lah $1 | awk '{ print $5}'`
+		fi
+		echo "<p style="margin-left:10px\;">Storage memory usage: <b>$INST</b></p>"
+}
+
+nzbmegasearch_datacheck() 
+{
+	array=( ramfs proc tempfs sysfs )
+	fs=$( stat -f -c '%T' $INSTALLDIR )
+	for i in "${array[@]}"
+	do
+		if [ $i = $fs ]; then
+		    echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your Install Directory is not persistent and WILL NOT survive a reboot. Please locate Install Directory on disk for persistency</p>"
+			break
+		elif [ $i = msdos ]; then
+			echo "<p style="color:red\;margin-left:10px\;margin-right:10px\;"><b>WARNING:</b> Your Install Directory is located on your flash drive. This will decrease your flash drives life span!</p>"
+			break
+		else
+			echo "<p style="color:green\;margin-left:10px\;margin-right:10px\;">Your Install will persist after a reboot</p>"
+			break
+		fi
+	done
+}
+
+nzbmegasearch_updateplg()
+{
+	cd /boot/config/plugins
+	[ -f nzbmegasearch_unplugged.plg.old ] && rm -f nzbmegasearch_unplugged.plg.old
+	if [ -f nzbmegasearch_unplugged.plg ]; then
+	mv nzbmegasearch_unplugged.plg nzbmegasearch_unplugged.plg.old
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/nzbmegasearch_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/nzbmegasearch_unplugged.plg
+	else
+	echo "Updating plugin"
+	wget -q --no-check-certificate https://github.com/Influencer/UNplugged/raw/master/nzbmegasearch_unplugged.plg
+	/usr/local/sbin/installplg /boot/config/plugins/nzbmegasearch_unplugged.plg
+	fi
+}
+nzbmegasearch_downgradeplg()
+{
+	cd /boot/config/plugins
+	if [ -f nzbmegasearch_unplugged.plg.old ]; then
+	rm -f /nzbmegasearch_unplugged.plg
+	mv nzbmegasearch_unplugged.plg.old nzbmegasearch_unplugged.plg
+	echo "downgrading plugin"
+	/usr/local/sbin/installplg /boot/config/plugins/nzbmegasearch_unplugged.plg
+	fi
+}
+
+# read our configuration
+source /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+CONFIG="/boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg"
+case "$1" in
+	'start')
+		nzbmegasearch_start
+	;;
+	'stop')
+		nzbmegasearch_stop
+	;;
+	'restart')
+		nzbmegasearch_restart
+	;;
+	'enable')
+		nzbmegasearch_enable $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'disable')
+		nzbmegasearch_disable $2 $3 $4 $5 $6 $7 $8 $9
+	;;
+	'install')
+		nzbmegasearch_install
+	;;
+	'update')
+		nzbmegasearch_update
+	;;
+	'storagesize')
+		nzbmegasearch_storagesize $2 $3
+	;;
+	'datacheck')
+		nzbmegasearch_datacheck
+	;;
+	'updateplg')
+		nzbmegasearch_updateplg
+	;;
+	'downgradeplg')
+		nzbmegasearch_downgradeplg
+	;;
+	'buttonstart')
+		nzbmegasearch_buttonstart
+	;;
+	*)
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
+esac
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/nzbmegasearch.page">
+<INLINE>
+<![CDATA[
+Menu="unplugged"
+Icon="nzbmegasearch_logo.png"
+Version="1.0"
+Author="Benjamin Waller; Influencer"
+Type="php"
+Title="NZBmegasearch"
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/nzbmegasearch_logo.png">
+<LOCAL>/boot/config/plugins/nzbmegasearch/nzbmegasearch_logo.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/device_status.png">
+<LOCAL>/boot/config/plugins/images/device_status.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/new_config.png">
+<LOCAL>/boot/config/plugins/images/new_config.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/information.png">
+<LOCAL>/boot/config/plugins/images/information.png</LOCAL>
+</FILE>
+
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/nzbmegasearch.php">
+<INLINE>
+<![CDATA[
+<?PHP
+$nzbmegasearch_cfg = parse_ini_file( "/boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg" );
+$nzbmegasearch_installed = file_exists( $nzbmegasearch_cfg["INSTALLDIR"] . "/mega2.py" ) ? "yes" : "no";
+$nzbmegasearch_rollback = file_exists( "boot/config/plugins/nzbmegasearch_unplugged.plg.old" ) ? "yes" : "no";
+if ($nzbmegasearch_installed=="yes")
+{
+	$nzbmegasearch_running = file_exists( "/var/run/nzbmegasearch/nzbmegasearch.pid") ? "yes" : "no";
+	if ($nzbmegasearch_cfg[PLG_STORAGESIZE]=="yes")
+		$nzbmegasearch_datasize = shell_exec ( "/etc/rc.d/rc.nzbmegasearch storagesize $nzbmegasearch_cfg[INSTALLDIR]" );
+	if ($nzbmegasearch_cfg[PLG_DATACHECK]=="yes")
+		$nzbmegasearch_datacheck = shell_exec ( "/etc/rc.d/rc.nzbmegasearch datacheck" );
+	$nzbmegasearch_plgver = shell_exec ( "cat /boot/config/plugins/nzbmegasearch/plgver.txt" );
+	if (file_exists($nzbmegasearch_cfg["INSTALLDIR"] . "/vernum.num"))
+		$nzbmegasearch_curversion = shell_exec( "cat $nzbmegasearch_cfg[INSTALLDIR]/vernum.num | cut -f2 -d ' '");
+	else
+		$nzbmegasearch_curversion = "couldn't determine the nzbmegasearch version"; 
+	
+	if (file_exists($nzbmegasearch_cfg["INSTALLDIR"] . "/custom_params.ini"))
+		$nzbmegasearch_port = trim(shell_exec( "cat $nzbmegasearch_cfg[INSTALLDIR]/custom_params.ini | grep 'port =' | cut -d' ' -f3" ));
+	else
+		$nzbmegasearch_port = "5000";
+	}
+?>
+
+<div style="width: 49%; float:left">
+	<div id="title">
+		<span class="left">Status:&#32;<img src='/plugins/nzbmegasearch/device_status.png'>
+			<?if ($nzbmegasearch_installed=="yes"):?>	
+				<?if ($nzbmegasearch_running=="yes"):?>
+					<a href="http://<?=$var['NAME'];?>:<?=$nzbmegasearch_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$nzbmegasearch_curversion?></b></span>
+				<?else:?>
+					<span class="red"><b>STOPPED</b></span>
+				<?endif;?>
+			<?else:?>
+				<span class="red"><b>NOT INSTALLED</b></span>
+			<?endif;?>	
+		</span>
+	</div>	
+	<?if ($nzbmegasearch_installed=="yes"):?>
+		<?if ($nzbmegasearch_running=="yes"):?>
+			<div style="position:relative;float:left;width:50%;text-align:right; margin-bottom:24px">
+				<form name="nzbmegasearch_start_stop" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch stop">
+					<input type="submit" name="runCmd" value="Stop">
+				</form>
+			</div>
+			<div style="position:relative;float:left;width:50%;margin-bottom:24px">
+				<form name="nzbmegasearch_restart" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch restart">
+					<input type="submit" name="runCmd" value="Restart">
+				</form>
+			</div>			
+		<?else:?>
+			<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+				<form name="nzbmegasearch_start" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch buttonstart">
+					<input type="submit" name="runCmd" value="Start">
+				</form>
+			</div>
+		<?endif;?>
+	<?else:?>
+		<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="nzbmegasearch_install" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch install">			
+				<input type="submit" name="runCmd" value="Install">
+			</form>
+		</div>
+	<?endif;?>
+	<? if ($nzbmegasearch_rollback=="yes"): ?>
+	<div style="position:relative;float:left;width:50%;text-align:right;margin-bottom:24px">
+			<form name="nzbmegasearch_update1" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch updateplg">
+					<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+	</div>
+	<div style="position:relative;float:left;width:50%;text-align:left;margin-bottom:24px">
+		<form name="nzbmegasearch_downgrade" method="POST" action="/update.htm" target="progressFrame">
+					<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch downgradeplg">
+					<input type="submit" name="runCmd" value="Downgrade PLG">
+			</form>
+	</div>
+	<?else:?>
+	<div style="position:relative;float:left;width:100%;text-align:center;margin-bottom:24px">
+			<form name="nzbmegasearch_update" method="POST" action="/update.htm" target="progressFrame">
+				<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch updateplg">			
+				<input type="submit" name="runCmd" value="Update PLG">
+			</form>
+		</div>
+	<?endif;?><br/>
+	<? if ($nzbmegasearch_installed=="yes"): ?>	
+		<center><hr size="3" width="50%" color="grey"></center>
+		<? if ($nzbmegasearch_cfg[PLG_STORAGESIZE]=="yes"): ?>
+			<?=$nzbmegasearch_datasize?>
+		<? endif; ?>
+			<?=$nzbmegasearch_datacheck?>
+		<p style="margin-left:10px;"><b>Plug-in Version: <?=$nzbmegasearch_plgver;?></b></p>
+	<? endif; ?>
+</div>
+<div style="width: 49%; float:right">
+	<div id="title">
+		<span class="left">Configuration:&#32;<img src='/plugins/nzbmegasearch/new_config.png'></span>
+	</div>
+	<form name="nzbmegasearch_settings" method="POST" action="/update.htm" target="progressFrame">
+		<input type="hidden" name="cmd" value="/etc/rc.d/rc.nzbmegasearch">
+		<table class="settings">
+			<tr>
+				<td>Enable NZBmegasearch:</td>
+				<td>
+					<select name="arg1" size="1">
+						<?=mk_option($nzbmegasearch_cfg['SERVICE'], "disable", "No");?>
+						<?=mk_option($nzbmegasearch_cfg['SERVICE'], "enable", "Yes");?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Install directory:</td>
+				<td><input type="text" name="arg2" maxlength="60" value="<?=$nzbmegasearch_cfg['INSTALLDIR'];?>"></td>
+			</tr>
+			<tr>
+				<td>Port:</td>
+				<td><input type="text" name="arg3" maxlength="40" value="<?=$nzbmegasearch_port;?>"></td>
+			</tr>
+			<tr>
+				<td>Run as user:</td>
+				<td>
+					<select name="runas" size="1" onChange="checkUSER(this.form);">
+						<?=mk_option($nzbmegasearch_cfg['RUNAS'], "nobody", "nobody");?>
+						<?=mk_option($nzbmegasearch_cfg['RUNAS'], "root", "root");?>
+						<option value='other'<?=($nzbmegasearch_cfg['RUNAS'] != "root" && $nzbmegasearch_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
+					</select>
+					<input type="hidden" name="arg4" style="width:66%" maxlength="40" value="<?=$nzbmegasearch_cfg['RUNAS'];?>">
+				</td>
+			</tr>
+			<tr><td>---</td></tr>
+			<tr>
+				<td>Show storage memory usage:</td>
+				<td>
+					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+						<?=mk_option($nzbmegasearch_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
+						<?=mk_option($nzbmegasearch_cfg['PLG_STORAGESIZE'], "no", "No");?>
+					</select>
+					<input type="hidden" name="arg5" value="<?=$nzbmegasearch_cfg['PLG_STORAGESIZE'];?>">
+				</td>
+			</tr>
+		</table>
+		<div align="center">
+				<hr size="3" align="center" width="75%" color="grey" style="margin-top:20px;margin-bottom:18px" >
+				<input type="submit" name="runCmd" value="Apply" style="margin-bottom:8px">
+				<button type="button" style="margin-bottom:35px" onClick="done();">Done</button>
+		</div>
+	</form>
+	<br />
+</div>
+
+<script type="text/javascript">
+function checkUSER(form)
+{
+	if (form.runas.selectedIndex < 2 )
+	{
+		form.arg4.value = form.runas.options[form.runas.selectedIndex].value;
+		form.arg4.type = "hidden";
+	}
+	else
+	{
+		form.arg4.value = "<?=$nzbmegasearch_cfg['RUNAS'];?>";
+		form.arg4.type = "text";
+	}
+}
+
+function checkSTORAGE(form)
+{
+	form.arg5.value = form.storagesize.options[form.storagesize.selectedIndex].value;
+}
+
+function checkDATA(form)
+{
+	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
+}
+
+checkUSER(document.nzbmegasearch_settings);
+checkSTORAGE(document.nzbmegasearch_settings);
+checkDATA(document.nzbmegasearch_settings);
+</script>
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/event/disks_mounted" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+source /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+if [ $SERVICE = enable ]; then
+/etc/rc.d/rc.nzbmegasearch start
+fi
+]]>
+</INLINE>
+</FILE>
+
+<!-- event handler -->
+<FILE Name="/usr/local/emhttp/plugins/nzbmegasearch/event/unmounting_disks" Mode="0770">
+<INLINE>
+<![CDATA[
+#!/bin/bash
+/etc/rc.d/rc.nzbmegasearch stop
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/tmp/nzbmegasearch-install" Run="/bin/bash">
+<INLINE>
+<![CDATA[
+# include our config vars
+source /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
+
+# create nzbmegasearch-writable directory for pid file
+if [ ! -e /var/run/nzbmegasearch ]; then
+	mkdir /var/run/nzbmegasearch
+	chown $RUNAS:users /var/run/nzbmegasearch
+	chmod 0777 /var/run/nzbmegasearch
+fi
+rm /tmp/nzbmegasearch-install
+]]>
+</INLINE>
+</FILE>
+
+<FILE Name="/var/log/plugins/nzbmegasearch">
+<INLINE>
+<![CDATA[
+
+]]>
+</INLINE>
+</FILE>
+
+</PLUGIN>
