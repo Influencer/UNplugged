@@ -74,7 +74,7 @@ rm /tmp/couchpotato_v2-cleanup
 <FILE Name="/boot/config/plugins/couchpotato_v2/plgver.txt">
 <INLINE>
 <![CDATA[
-2.4
+2.4.1
 ]]>
 </INLINE>
 </FILE>
@@ -324,8 +324,8 @@ source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 	
 	cd /tmp
 	git clone -b $BRANCH $INSTALLURL Couchpotato
-	cp -Rfu /tmp/CouchPotatoServer/. $INSTALLDIR
-	rm -Rf /tmp/CouchPotatoServer
+	cp -Rfu /tmp/Couchpotato/. $INSTALLDIR
+	rm -Rf /tmp/Couchpotato
 	
 	chown -R $RUNAS:users "$INSTALLDIR" "$DATADIR"
 	sleep 1
