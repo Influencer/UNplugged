@@ -22,7 +22,6 @@ I have...
 <URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
 <MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
-
 <FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
 <MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
