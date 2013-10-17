@@ -242,11 +242,12 @@ nzbmegasearch_install()
 	
 	cd /tmp
 	git clone https://github.com/pillone/usntssearch.git usntssearch
-	cp -Rfu /tmp/usntssearch/NZBmegasearch/* $INSTALLDIR
-	rm -Rf /tmp/usntssearch
-	chmod -R 777 "$INSTALLDIR"
-	chown -R $RUNAS:users "$INSTALLDIR"
-	sleep 3
+        cp -Rfu /tmp/usntssearch/NZBmegasearch/* $INSTALLDIR
+        rm -Rf /tmp/usntssearch
+        chmod -R 777 "$INSTALLDIR"
+        chown -R $RUNAS:users "$INSTALLDIR"
+        ln -s /boot/config/plugins/nzbmegasearch/custom_params.ini $INSTALLDIR/custom_params.ini
+        sleep 3
 	echo "... OK"
 	sleep 1
 }
