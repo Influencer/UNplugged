@@ -112,16 +112,16 @@ plgstorage=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep PLG_STORAGES
 if [[ $plgstorage = "" ]]; then
    echo "PLG_STORAGESIZE=\"yes\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
 fi
-plgdata=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep PLG_DATACHECK`
-if [[ $plgdata = "" ]]; then
-	break
-else
-	sed "/$plgdata^/d" /boot/config/plugins/sickbeard/sickbeard.cfg >tmp
-	mv tmp /boot/config/plugins/sickbeard/sickbeard.cfg
-fi
 plgforceupdate=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep FORCEUPDATE`
 if [[ $plgforceupdate = "" ]]; then
 	echo "FORCEUPDATE=\"yes\"" >> /boot/config/plugins/sickbeard/sickbeard.cfg
+fi
+plgdata=`cat /boot/config/plugins/sickbeard/sickbeard.cfg | grep PLG_DATACHECK`
+if [[ $plgdata = "" ]]; then
+	exit
+else
+	sed "/$plgdata^/d" /boot/config/plugins/sickbeard/sickbeard.cfg >tmp
+	mv tmp /boot/config/plugins/sickbeard/sickbeard.cfg
 fi
 rm /tmp/checkconfig
 ]]>

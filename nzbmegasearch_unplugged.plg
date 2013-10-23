@@ -181,7 +181,7 @@ nzbmegasearch_update()
 
 write_config()
 {
-	CONFIG="$INSTALLDIR/custom_params.ini"
+	CONFIG="/boot/config/plugins/nzbmegasearch/custom_params.ini"
 	echo "# nzbmegasearch configuration:" > /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
 	echo "SERVICE=\"$SERVICE\"" >> /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
 	echo "INSTALLDIR=\"$INSTALLDIR\"" >> /boot/config/plugins/nzbmegasearch/nzbmegasearch.cfg
@@ -241,11 +241,12 @@ nzbmegasearch_install()
 	
 	cd /tmp
 	git clone https://github.com/pillone/usntssearch.git usntssearch
-	cp -Rfu /tmp/usntssearch/NZBmegasearch/* $INSTALLDIR
-	rm -Rf /tmp/usntssearch
-	chmod -R 777 "$INSTALLDIR"
-	chown -R $RUNAS:users "$INSTALLDIR"
-	sleep 3
+        cp -Rfu /tmp/usntssearch/NZBmegasearch/* $INSTALLDIR
+        rm -Rf /tmp/usntssearch
+        chmod -R 777 "$INSTALLDIR"
+        chown -R $RUNAS:users "$INSTALLDIR"
+        ln -s /boot/config/plugins/nzbmegasearch/custom_params.ini $INSTALLDIR/custom_params.ini
+        sleep 3
 	echo "... OK"
 	sleep 1
 }
@@ -401,8 +402,8 @@ if ($nzbmegasearch_installed=="yes")
 	else
 		$nzbmegasearch_curversion = "couldn't determine the nzbmegasearch version"; 
 	
-	if (file_exists($nzbmegasearch_cfg["INSTALLDIR"] . "/custom_params.ini"))
-		$nzbmegasearch_port = trim(shell_exec( "cat $nzbmegasearch_cfg[INSTALLDIR]/custom_params.ini | grep 'port =' | cut -d' ' -f3" ));
+	if (file_exists("/boot/config/plugins/nzbmegasearch/custom_params.ini"))
+		$nzbmegasearch_port = trim(shell_exec( "cat /boot/config/plugins/nzbmegasearch/custom_params.ini | grep 'port =' | cut -d' ' -f3" ));
 	else
 		$nzbmegasearch_port = "5000";
 	}
