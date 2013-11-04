@@ -18,9 +18,9 @@ I have...
  * done this because since I am hosting the plug-ins on github, there is an accurate changelog with the commits.
 -->
 
-<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
-<URL>--no-check-certificate https://dl.dumptruck.goldenfrog.com/p/Vq3zpArAKB/python-2.7.3-i686-5PTr.txz?dl=1</URL>
-<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
+<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
+<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
+<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
 </FILE>
 
 <FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
