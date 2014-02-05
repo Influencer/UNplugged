@@ -19,17 +19,17 @@ I have...
 
 -->
 
-<FILE Name="/boot/packages/python-2.6.6-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
-<MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
+<FILE Name="/boot/packages/python-2.7.3-i686-5PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/python-2.7.3-i686-5PTr.txz</URL>
+<MD5>644b5f3f14e76aaa5b43f01a50d8defa</MD5>
 </FILE>
-<FILE Name="/boot/packages/sqlite-3.7.5-i486-1.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/ap/sqlite-3.7.5-i486-1.txz</URL>
-<MD5>6786d3764cb294ecb71cdd24e6d171d1</MD5>
+<FILE Name="/boot/packages/sqlite-3.7.16-i686-1PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/sqlite-3.7.16-i686-1PTr.txz</URL>
+<MD5>104865e791d032e91a85d9c134b21be1</MD5>
 </FILE>
-<FILE Name="/boot/packages/zlib-1.2.5-i486-4.txz" Run="upgradepkg --install-new">
-<URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/l/zlib-1.2.5-i486-4.txz</URL>
-<MD5>eabaa7087a32dfd9f6d2662163779d07</MD5>
+<FILE Name="/boot/packages/zlib-1.2.7-i686-2PTr.txz" Run="upgradepkg --install-new">
+<URL>--no-check-certificate https://copy.com/8Zye0EQw7L6sy72K/unrad-generic/zlib-1.2.7-i686-2PTr.txz</URL>
+<MD5>e68aca878cb2c95af873e7ae4c231d45</MD5>
 </FILE>
 <FILE Name="/boot/packages/curl-7.21.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/n/curl-7.21.4-i486-1.txz</URL>
