@@ -22,7 +22,6 @@ I have...
 <URL>http://slackware.cs.utah.edu/pub/slackware/slackware-13.37/slackware/d/python-2.6.6-i486-1.txz</URL>
 <MD5>b8de0c9f8b89aa7b3c89823d20076867</MD5>
 </FILE>
-
 <FILE Name="/boot/packages/git-1.7.4.4-i486-1.txz" Run="upgradepkg --install-new">
 <URL>http://slackware.osuosl.org/slackware-13.37/slackware/d/git-1.7.4.4-i486-1.txz</URL>
 <MD5>5d92bd44e67618dfdacc2e2fa9a41821</MD5>
