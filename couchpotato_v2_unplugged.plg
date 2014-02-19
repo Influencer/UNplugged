@@ -235,7 +235,7 @@ write_config()
 	echo "BRANCH=\"$BRANCH\"" >> /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 	if [ -e "$CONFIGFILE" ]; then
 		sed -i 's!data_dir = '"`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`"'!data_dir = '"$DATADIR"'!' "$CONFIGFILE"
-		sed -i 's!port = '"`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'`"'!port = '"$PORT"'!' "$CONFIGFILE"
+		sed -i 's!port = '"`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==1'`"'!port = '"$PORT"'!' "$CONFIGFILE"
 	fi
 }
 
@@ -411,7 +411,7 @@ couchpotato_vercheck()
 source /boot/config/plugins/couchpotato_v2/couchpotato_v2.cfg
 if [ -e "$CONFIGFILE" ]; then
 	DATADIR=`cat "$CONFIGFILE" | grep 'data_dir' | cut -d' ' -f3`
-	PORT=`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'`
+	PORT=`cat "$CONFIGFILE" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==1'`
 fi
 
 case "$1" in
@@ -511,7 +511,7 @@ if ($couchpotato_installed=="yes")
 }
 // get CouchPotato v2 port
 if (file_exists($couchpotato_configfile))
-	$couch_port = trim(shell_exec( "cat \"$couchpotato_configfile\" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==2'" ));
+	$couch_port = trim(shell_exec( "cat \"$couchpotato_configfile\" | grep 'port = ' | cut -d' ' -f3 | awk 'NR==1'" ));
 ?>
 
 <div style="width: 49%; float:left">
