@@ -51,7 +51,7 @@ rm /tmp/vfs_recycle-cleanup
 <FILE Name="/boot/config/plugins/vfs_recycle/plgver.txt">
 <INLINE>
 <![CDATA[
-1.1
+1.2
 ]]>
 </INLINE>
 </FILE>
