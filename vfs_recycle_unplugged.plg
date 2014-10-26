@@ -96,8 +96,6 @@ vfs objects = recycle
         recycle:keeptree = Yes
         recycle:touch = Yes
         recycle:versions = Yes
-        recycle:exclude = *.tmp
-        recycle:exclude_dir = /tmp
         recycle:noversions = *.doc
 #vfs_recycle_end
 ]]>
