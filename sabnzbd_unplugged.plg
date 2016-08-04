@@ -137,7 +137,7 @@ Type="menu"
 <INLINE>
 <![CDATA[
 #!/bin/sh
-# start|stop|restart|enable|disable|install|update|storagesize|datacheck SABnzbd.
+# start|stop|restart|enable|disable|install|update|storagesize|datacheck|status SABnzbd.
 
 sabnzbd_start()
 {
@@ -145,17 +145,19 @@ sabnzbd_start()
 	if [ $SERVICE != "enable" ]; then
 		sed -i "s/"disable"/"enable/"" $CONFIG
 	fi
-  
-	# no-op if already running
-	if [ -r /var/run/sabnzbd/sabnzbd-$PORT.pid ]; then
-		return
-	fi
 
+	# no-op if already running.  nb. cant rely on prev created pid file due to permutations possible when enabling https. best to rely on live process check
+    sabpid=$(ps -ef | grep SABnzbd.py | grep -v grep | awk '{print $2}');
+	if [ "$sabpid" != "" ]; then 
+	  return
+	fi
+	
 	# if directory doesn't exist or SABnzbd is not found, install it
 	if [[ "$INSTALLDIR" != "" &&  ! -e "$INSTALLDIR/SABnzbd.py" ]]; then
 		sabnzbd_install
 	fi
     
+	cd /tmp
 	if [ ! -r $INSTALLDIR/sabnzbd/api.pyo ]; then
 	CMDLINE="sudo -u $RUNAS python -OO $INSTALLDIR/SABnzbd.py -d -s 0.0.0.0:$PORT --config-file $DATADIR --pid /var/run/sabnzbd/ > /dev/null 2>&1"
 	else
@@ -166,61 +168,49 @@ sabnzbd_start()
 	sleep 1
 	$CMDLINE
 	
-  if [ -f $DATADIR/sabnzbd.ini ]; then
+	if [ -f $DATADIR/sabnzbd.ini ]; then
 		chmod 777 "$DATADIR/sabnzbd.ini"
 		TIMER=0
-		HTTPS=`cat "$DATADIR/sabnzbd.ini" | grep 'enable_https' | cut -d' ' -f3`
-			if [ $HTTPS = 0 ]; then
-				while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
-				sleep 1
-				let TIMER=$TIMER+1
-       				echo -n $TIMER
-       				if [ $TIMER -gt 10 ]; then
-        			        echo -n "sabnzbd-$PORT.pid not created for some reason"
-        			        break
-		        	fi
-				
-				done
-			elif [ $HTTPS = 1 ]; then
-				PORT=`cat "$DATADIR/sabnzbd.ini" | grep 'https_port' | cut -d' ' -f3`
-				while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
-				sleep 1
-				let TIMER=$TIMER+1
-				if [ $TIMER -gt 10 ]; then
-					echo -n "sabnzbd-$PORT.pid not created for some reason"
-					break
-				fi
-				done
-			fi
+		# check for http vs https. set port to https port if https enabled and https port non-empty. otherwise while pid check will fail under some conditions
+		[[ $HTTPS -eq 1 && $HTTPS_PORT != "\"\"" ]] && PORT=$HTTPS_PORT
+		while [ ! -e /var/run/sabnzbd/sabnzbd-$PORT.pid  ]; do
+		sleep 1
+		let TIMER=$TIMER+1
+		if [ $TIMER -gt 10 ]; then
+			echo -n "sabnzbd-$PORT.pid not created for some reason"
+			break
+		fi
+		done
 	fi
 }
 
 sabnzbd_stop()
 {
-	# no-op if not running
-	if [ ! -r /var/run/sabnzbd/sabnzbd-$PORT.pid ]; then
-		return
-	fi
+	# no-op if not running.  wildcard pid file chk due to possible dupe during switch from http to https
+	for f in /var/run/sabnzbd/sabnzbd-*.pid; do
+    if [ ! -f "$f" ]; then return; fi
+    done
 	
 	echo "Stopping SABnzbd..."
 	sleep 1
 	
 	if [ -d $DATADIR ] && [ -f $DATADIR/sabnzbd.ini ]; then
 		APIKEY=`grep -w api_key $DATADIR/sabnzbd.ini | cut -d " " -f3`
-		IP=$(ifconfig  | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | grep -v '^5' | awk '{ print $1}')
-		RES=$(wget -qO - "http://$IP:$PORT/sabnzbd/api?mode=shutdown&apikey=$APIKEY")
+		sabnzbd_portchk
+		RES=$(wget -qO - "$URLTYPE://$IP:$PORT/sabnzbd/api?mode=shutdown&apikey=$APIKEY")
 		if [[ $RES != "ok" ]]; then
-			kill $(cat /var/run/sabnzbd/sabnzbd-$PORT.pid)
+		  for f in /var/run/sabnzbd/sabnzbd-*.pid; do # secondary process kill. iterate thru any pid files found in /var/run/sabnzbd
+            if [ -f "$f" ]; then kill -9 $(cat $f); fi
+          done
 		fi
 	else
-		kill $(cat /var/run/sabnzbd/sabnzbd-$PORT.pid)
+		kill -9 $(cat /var/run/sabnzbd/sabnzbd-$PORT.pid)
 	fi
 	sleep 3
 
-	if [ -e /var/run/sabnzbd/sabnzbd-$PORT.pid ]; then
-		kill -9 $(cat /var/run/sabnzbd/sabnzbd-$PORT.pid )
-		rm /var/run/sabnzbd/sabnzbd-$PORT.pid
-	fi
+	#remove any remaining stale pid files
+	rm -f /var/run/sabnzbd/*.pid
+	
 	echo "... OK"
 	sleep 1
 }
@@ -448,10 +438,62 @@ fi
 echo $version
 }
 
+sabnzbd_portchk()
+{
+  # does a probe for a list of what services are up
+  # possible permutations:
+  # (http://ip:port)
+  # (http://ip:port & https://ip:https_port) OR (https://ip:port)
+  
+  if [ -d $DATADIR ] && [ -f $DATADIR/sabnzbd.ini ]; then
+    IP=$(ifconfig  | grep 'inet addr:' | grep -v '127.0.0.1' | cut -d: -f2 | grep -v '^5' | awk '{ print $1}')
+    RES1=$(wget -qO - "http://$IP:$PORT/sabnzbd/api?mode=version")
+    RES2=$(wget --no-check-certificate -qO - "https://$IP:$PORT/sabnzbd/api?mode=version")
+    RES3=$(wget --no-check-certificate -qO - "https://$IP:$HTTPS_PORT/sabnzbd/api?mode=version")
+    if [ ! -z $RES1 ]; then
+      URLTYPE="http"
+    elif [ ! -z $RES2 ]; then
+      URLTYPE="https"
+    elif [ ! -z $RES3 ]; then
+      URLTYPE= "https"
+      $PORT=$HTTPS_PORT
+    fi	
+    [[ $RES1 ]] && RES1="HTTP Port: $PORT"
+    [[ $RES2 ]] && RES2="HTTPS Port: $PORT"
+    [[ $RES3 ]] && RES3=" & HTTPS Port: $HTTPS_PORT"
+  fi
+}
+
+sabnzbd_status()
+{
+  case "$1" in
+    'chkrunning')  
+    # to account for situation where user has just enabled https from inside sab gui and has returned to unraid gui, we can't rely on
+	# using the values from sab ini file as they will infer https is enabled when in fact it isn't until the daemon is restarted.
+	# to allow for unraid webgui to present sab as running and therefore display stop start restart buttons, we should check for 
+	# running sab process.
+	RES=$(ps -ef | grep SABnzbd.py | grep -v grep | awk '{print $2}');
+    if [[ $RES = "" ]]; then
+        echo -n "stopped"
+      else
+        echo -n "running"
+      fi
+	;;
+	'portinfo')
+      sabnzbd_portchk
+	  echo "<p style="margin-left:10px\;">SABnzbd is running on $RES1$RES2$RES3</p>"
+	;;
+	*)
+	  echo "call this function with params: chkrunning|portinfo"
+  esac
+}
+
 # read our configuration
 source /boot/config/plugins/sabnzbd/sabnzbd.cfg
 if [ -e $DATADIR/sabnzbd.ini ]; then
 	PORT=`cat "$DATADIR/sabnzbd.ini" | grep '^port' | awk 'NR==1' | cut -d' ' -f3 | tr -d '\r'`
+	HTTPS=`cat "$DATADIR/sabnzbd.ini" | grep 'enable_https =' | cut -d' ' -f3`
+	HTTPS_PORT=`cat "$DATADIR/sabnzbd.ini" | grep 'https_port =' | cut -d' ' -f3`
 else
 	PORT=`cat /boot/config/plugins/sabnzbd/sabnzbd.ini | grep '^port' | awk 'NR==1' | cut -d' ' -f3 | tr -d '\r'`
 fi
@@ -496,8 +538,11 @@ case "$1" in
 	'newversion')
 		sabnzbd_newver
 	;;
+	'status')
+	    sabnzbd_status $2 $3
+	;;
 	*)
-		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg"
+		echo "usage $0 start|stop|restart|enable|disable|install|update|storagesize|datacheck|updateplg|downgradeplg|status"
 esac
 ]]>
 </INLINE>
@@ -541,17 +586,21 @@ $sabnzbd_installed = file_exists( $sabnzbd_cfg["INSTALLDIR"] . "/SABnzbd.py" ) ?
 $sabnzbd_rollback = file_exists( "boot/config/plugins/sabnzbd_unplugged.plg.old" ) ? "yes" : "no";
 $sabnzbd_plgver = shell_exec ( "cat /boot/config/plugins/sabnzbd/plgver.txt" );
 $sabnzbd_configfile = $sabnzbd_cfg["DATADIR"] . "/sabnzbd.ini";
-if (file_exists("$sabnzbd_configfile"))
-$https = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'enable_https =' | cut -d' ' -f3" ));
+if (file_exists("$sabnzbd_configfile")) {
+  //setup vars for later to decide whether https is enabled. this also takes account for condition where https is enabled but user
+  //has not supplied a value in http_port.  SAB allows this and if https_port is empty, it uses the value in port instead.  so here
+  //we check for empty http_port and assign it regular port if empty.  make for easier checking below.
+  $https = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'enable_https =' | cut -d' ' -f3" ));
+  $sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
+  $https_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'https_port =' | cut -d' ' -f3" ));
+}
 if ($sabnzbd_installed=="yes") 
 {
-	if( (file_exists("$sabnzbd_configfile")) && ($https=="1")) {
-		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep 'https_port =' | cut -d' ' -f3" ));
-	} else { 
-		$sab_port = trim(shell_exec( "cat \"$sabnzbd_configfile\" | grep '^port' | awk 'NR==1' | cut -d' ' -f3" ));
-			}
-	$sabnzbd_running = file_exists( "/var/run/sabnzbd/sabnzbd-".$sab_port.".pid") ? "yes" : "no";
+    $sabnzbd_running = (shell_exec("/etc/rc.d/rc.sabnzbd status chkrunning")=="running") ? "yes" : "no";
 			
+	if ($sabnzbd_running=="yes") {
+		$sabnzbd_portinfo = shell_exec ( "/etc/rc.d/rc.sabnzbd status portinfo" );
+		}
 	if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes") {
 		$sabnzbd_datasize = shell_exec ( "/etc/rc.d/rc.sabnzbd storagesize $sabnzbd_cfg[INSTALLDIR] $sabnzbd_cfg[DATADIR]" );
 		}
@@ -572,7 +621,11 @@ if ($sabnzbd_installed=="yes")
 		<span class="left">Status:&#32;<img src='/plugins/sabnzbd/device_status.png'>
 			<?if ($sabnzbd_installed=="yes"):?>	
 				<?if ($sabnzbd_running=="yes"):?>
-					<a href="http://<?=$var['NAME'];?>:<?=$sab_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>
+                  <?if (($https=="1") && ($https_port == "\"\"")):?>	
+					<a href="https://<?=$var['NAME'];?>:<?=$sab_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>
+                  <?else:?>
+					<a href="http://<?=$var['NAME'];?>:<?=$sab_port;?>" target="_blank"><span class="green"><b>RUNNING</b></span></a><span style="font-size:12px;"> with version: <b><?=$sabnzbd_curversion?></b></span>					
+				  <?endif;?>	
 				<?else:?>
 					<span class="red"><b>STOPPED</b></span>
 				<?endif;?>
@@ -634,6 +687,7 @@ if ($sabnzbd_installed=="yes")
 	<?endif;?><br/>
 	<? if ($sabnzbd_installed=="yes"): ?>	
 		<center><hr size="3" width="50%" color="grey"></center>
+		<?=$sabnzbd_portinfo?>
 		<? if ($sabnzbd_cfg[PLG_STORAGESIZE]=="yes"): ?>
 			<?=$sabnzbd_datasize?>
 		<? endif; ?>
@@ -687,7 +741,7 @@ if ($sabnzbd_installed=="yes")
 				<td><input type="checkbox" name="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
 			</tr>
 			<tr>
-				<td>Port:</td>
+				<td>HTTP Port:</td>
 				<td><input type="text" name="arg3" maxlength="40" value="<?=$sab_port;?>"></td>
 			</tr>
 			<tr>
