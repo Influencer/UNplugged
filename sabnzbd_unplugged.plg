@@ -643,7 +643,7 @@ if ($sabnzbd_installed=="yes")
 		<p style="margin-left:10px;"><b>Plug-in Version: <?=$sabnzbd_plgver;?></b></p>
 		<? if (strcmp($sabnzbd_curversion, $sabnzbd_newversion)!=0): ?>
 			<center>
-				<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame">
+				<form name="sabnzbd_settings" method="POST" action="/update.htm" target="progressFrame" onsubmit="validateForm();">
 					<input type="hidden" name="cmd" value="/etc/rc.d/rc.sabnzbd update">
 					<p style="color:blue;margin-left:10px;">Update available to version: <b><?=$sabnzbd_newversion;?></b></p>
 					<hr size="3" width="50%" color="grey" style="margin-bottom:15px">
@@ -663,7 +663,7 @@ if ($sabnzbd_installed=="yes")
 			<tr>
 				<td>Enable SABnzbd:</td>
 				<td>
-					<select name="arg1" size="1">
+					<select name="arg1" id="arg1" size="1">
 						<?=mk_option($sabnzbd_cfg['SERVICE'], "disable", "No");?>
 						<?=mk_option($sabnzbd_cfg['SERVICE'], "enable", "Yes");?>
 					</select>
@@ -671,12 +671,12 @@ if ($sabnzbd_installed=="yes")
 			</tr>
 			<tr>
 				<td>Install directory:</td>
-				<td><input type="text" name="arg4" maxlength="60" value="<?=$sabnzbd_cfg['INSTALLDIR'];?>"></td>
+				<td><input type="text" name="arg4" id="arg4" maxlength="60" value="<?=$sabnzbd_cfg['INSTALLDIR'];?>"></td>
 			</tr>
 			<tr>
 				<td>Install Beta:</td>
 				<td>
-					<select name="arg8" size="1">
+					<select name="arg8" id="arg8" size="1">
 						<?=mk_option($sabnzbd_cfg['BETA'], "no", "No");?>
 						<?=mk_option($sabnzbd_cfg['BETA'], "yes", "Yes");?>
 					</select>
@@ -684,42 +684,42 @@ if ($sabnzbd_installed=="yes")
 			</tr>
 			<tr>
 				<td>Data directory:</td>
-				<td><input type="checkbox" name="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" style="width:86%" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
+				<td><input type="checkbox" name="use_data" id="use_data" <?=($sabnzbd_cfg['DATADIR']!=$sabnzbd_cfg['INSTALLDIR'])?"checked=\"checked\"":"";?> onChange="checkDATADIR(this.form);"> <input type="text" name="arg5" id="arg5" style="width:86%" maxlength="60" value="<?=$sabnzbd_cfg['DATADIR'];?>"></td>
 			</tr>
 			<tr>
 				<td>Port:</td>
-				<td><input type="text" name="arg3" maxlength="40" value="<?=$sab_port;?>"></td>
+				<td><input type="text" name="arg3" id="arg3" maxlength="40" value="<?=$sab_port;?>"></td>
 			</tr>
 			<tr>
 				<td>Run as user:</td>
 				<td>
-					<select name="runas" size="1" onChange="checkUSER(this.form);">
+					<select name="runas" id="runas" size="1" onChange="checkUSER(this.form);">
 						<?=mk_option($sabnzbd_cfg['RUNAS'], "nobody", "nobody");?>
 						<?=mk_option($sabnzbd_cfg['RUNAS'], "root", "root");?>
 						<option value='other'<?=($sabnzbd_cfg['RUNAS'] != "root" && $sabnzbd_cfg['RUNAS'] != "nobody")?" selected=yes":"" ;?>>other</option>
 					</select>
-					<input type="hidden" name="arg2" style="width:66%" maxlength="40" value="<?=$sabnzbd_cfg['RUNAS'];?>">
+					<input type="hidden" name="arg2" id="arg2" style="width:66%" maxlength="40" value="<?=$sabnzbd_cfg['RUNAS'];?>">
 				</td>
 			</tr>
 			<tr><td>---</td></tr>
 			<tr>
 				<td>Show storage memory usage:</td>
 				<td>
-					<select name="storagesize" size="1" onChange="checkSTORAGE(this.form);">
+					<select name="storagesize" id="storagesize" size="1" onChange="checkSTORAGE(this.form);">
 						<?=mk_option($sabnzbd_cfg['PLG_STORAGESIZE'], "yes", "Yes");?>
 						<?=mk_option($sabnzbd_cfg['PLG_STORAGESIZE'], "no", "No");?>
 					</select>
-					<input type="hidden" name="arg6" value="<?=$sabnzbd_cfg['PLG_STORAGESIZE'];?>">
+					<input type="hidden" name="arg6" id="arg6" value="<?=$sabnzbd_cfg['PLG_STORAGESIZE'];?>">
 				</td>
 			</tr>
 			<tr>
 				<td>Show data persistency information:</td>
 				<td>
-					<select name="datacheck" size="1" onChange="checkDATA(this.form);">
+					<select name="datacheck" id="datacheck" size="1" onChange="checkDATA(this.form);">
 						<?=mk_option($sabnzbd_cfg['PLG_DATACHECK'], "yes", "Yes");?>
 						<?=mk_option($sabnzbd_cfg['PLG_DATACHECK'], "no", "No");?>
 					</select>
-					<input type="hidden" name="arg7" value="<?=$sabnzbd_cfg['PLG_DATACHECK'];?>">
+					<input type="hidden" name="arg7" id="arg7" value="<?=$sabnzbd_cfg['PLG_DATACHECK'];?>">
 				</td>
 			</tr>
 		</table>
@@ -733,6 +733,39 @@ if ($sabnzbd_installed=="yes")
 </div>
 
 <script type="text/javascript">
+function validateForm() {
+  //change disabled state in order for values to pass upon form submission 
+  document.getElementById('arg2').disabled = false;
+  document.getElementById('arg3').disabled = false;
+  document.getElementById('arg4').disabled = false;
+  document.getElementById('arg5').disabled = false;
+  document.getElementById('arg6').disabled = false;
+  document.getElementById('arg7').disabled = false;
+  document.getElementById('arg8').disabled = false;
+  document.getElementById('runas').disabled = false;
+  document.getElementById('use_data').disabled = false;
+  document.getElementById('storagesize').disabled = false;
+  document.getElementById('datacheck').disabled = false;
+
+}
+
+function checkRUNNING(form) {
+  if ("<?=$sabnzbd_running;?>" == "yes") {
+  //set form fields (excl. service) to disabled to show greyed in webgui whilst sab is running
+  document.getElementById('arg2').disabled = true;
+  document.getElementById('arg3').disabled = true;
+  document.getElementById('arg4').disabled = true;
+  document.getElementById('arg5').disabled = true;
+  document.getElementById('arg6').disabled = true;
+  document.getElementById('arg7').disabled = true;
+  document.getElementById('arg8').disabled = true;
+  document.getElementById('runas').disabled = true;
+  document.getElementById('use_data').disabled = true;
+  document.getElementById('storagesize').disabled = true;
+  document.getElementById('datacheck').disabled = true;
+  }
+}
+
 function checkUSER(form)
 {
 	if (form.runas.selectedIndex < 2 )
@@ -771,6 +804,7 @@ function checkDATA(form)
 	form.arg7.value = form.datacheck.options[form.datacheck.selectedIndex].value;
 }
 
+checkRUNNING(document.sabnzbd_settings);
 checkUSER(document.sabnzbd_settings);
 checkDATADIR(document.sabnzbd_settings);
 checkSTORAGE(document.sabnzbd_settings);
